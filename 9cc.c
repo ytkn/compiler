@@ -56,6 +56,7 @@ bool consume(char op);
 int expect_number();
 
 Node *primary();
+Node *unray();
 Node *mul();
 Node *expr();
 
@@ -73,15 +74,28 @@ Node *expr(){
 }
 
 Node *mul(){
-    Node *node = primary();
+    Node *node = unray();
     while(true){
         if(consume('*')){
-            node = new_node(ND_MUL, node, primary());
+            node = new_node(ND_MUL, node, unray());
         }else if(consume('/')){
-            node = new_node(ND_DIV, node, primary());
+            node = new_node(ND_DIV, node, unray());
         }else{
             return node;
         }
+    }
+}
+
+Node *unray(){
+    if(consume('-')){
+        Node *node = primary();
+        node->val = -node->val;
+        return node;
+    }else if(consume('+')){
+        Node *node = primary();
+        return node;
+    }else{
+        Node *node = primary();
     }
 }
 
@@ -102,6 +116,21 @@ void error(char *fmt, ...){
     exit(1);
 }
 
+char *user_input;
+
+void error_at(char *loc, char *fmt, ...) {
+  va_list ap;
+  va_start(ap, fmt);
+
+  int pos = loc - user_input;
+  fprintf(stderr, "%s\n", user_input);
+  fprintf(stderr, "%*s", pos, ""); // print pos spaces.
+  fprintf(stderr, "^ ");
+  vfprintf(stderr, fmt, ap);
+  fprintf(stderr, "\n");
+  exit(1);
+}
+
 bool consume(char op){
     if(token->kind != TK_RESERVED || token->str[0] != op){
         return false;
@@ -112,14 +141,14 @@ bool consume(char op){
 
 void expect(char op){
     if(token->kind != TK_RESERVED || token->str[0] != op){
-        error("'%c'ではありません", op);
+        error_at(token->str, "'%c'ではありません", op);
     }
     token = token->next;
 }
 
 int expect_number(){
     if(token->kind != TK_NUM){
-        error("数ではありません");
+        error_at(token->str, "数ではありません");
     }
     int ret = token->val;
     token = token->next;
@@ -138,7 +167,8 @@ Token *new_token(TokenKind kind, Token *cur, char *str){
     return tok;
 }
 
-Token *tokenize(char *p){
+Token *tokenize(){
+    char *p = user_input;
     Token head;
     head.next = NULL;
     Token *cur = &head;
@@ -159,7 +189,7 @@ Token *tokenize(char *p){
             continue;
         }
 
-        error("トークナイズ出来ません\n");
+        error_at(token->str, "トークナイズ出来ません\n");
     }
 
     new_token(TK_EOF, cur, p);
@@ -220,7 +250,8 @@ int main(int argc, char** argv){
         fprintf(stderr, "引数の個数が正しくありません\n");
         return 1;
     }
-    token = tokenize(argv[1]);
+    user_input = argv[1];
+    token = tokenize();
     Node *root = expr();
     printf(".intel_syntax noprefix\n");
     printf(".globl main\n");

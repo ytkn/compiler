@@ -18,6 +18,7 @@ assert(){
 assert 2 12+34+56-100
 assert 72 12*8-4*6
 assert 3 5+2*3-4*2
+assert 9 -5+2*3+4*2
 assert 4 "(12*8)/(4*6)"
 assert 2 12+34+56-100
 assert 0 "11 + 11 - 22"
