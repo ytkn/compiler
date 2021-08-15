@@ -23,6 +23,15 @@ assert 4 "(12*8)/(4*6)"
 assert 2 12+34+56-100
 assert 0 "11 + 11 - 22"
 assert 41 " 12 + 34 - 5 "
+assert 0 "0 == 1"
+assert 1 "0 != 1"
+assert 1 "0 < 1"
+assert 1 "0 <= 1"
+assert 0 "0 > 1"
+assert 0 "0 >= 1"
 
+assert 1 "2*3+4 == 10-3+5*2-7"
+assert 1 "2*3+4 < 10-3+5*2"
+assert 1 "48/4 == 10-3+10/2"
 
 echo OK
