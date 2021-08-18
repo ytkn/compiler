@@ -21,10 +21,6 @@ void error_at(char *loc, char *fmt, ...) {
   exit(1);
 }
 
-bool at_eof(){
-    return token->kind == TK_EOF;
-}
-
 Token *new_token(TokenKind kind, Token *cur, char *str, int len){
     Token *tok = calloc(1, sizeof(Token));
     tok->kind = kind;
@@ -55,7 +51,13 @@ Token *tokenize(){
             continue;
         }
 
-        if(strchr("+-*/()<>", *p)){
+        if('a' <= *p && *p <= 'z'){
+            cur = new_token(TK_IDENT, cur, p, 1);
+            p++;
+            continue;
+        }
+
+        if(strchr("+-*/()<>;=", *p)){
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }

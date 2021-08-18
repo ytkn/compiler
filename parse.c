@@ -1,11 +1,28 @@
 #include "9cc.h"
 
+bool at_eof(){
+    return token->kind == TK_EOF;
+}
+
 bool consume(char *op){
     if(token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len)){
         return false;
     }
     token = token->next;
     return true;
+}
+
+Token *consume_ident(){
+    if(token->kind != TK_IDENT) return NULL;
+    Token *tok = token;
+    token = token->next;
+    return tok;   
+}
+
+void expect(char *op) {
+  if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
+    error("'%s'ではありません", op);
+  token = token->next;
 }
 
 int expect_number(){
@@ -32,8 +49,30 @@ Node *new_node_num(int val){
     return node;
 }
 
+void *program(){
+    int i = 0;
+    while(!at_eof()){
+        code[i++] = stmt();
+    }
+    code[i] = NULL;
+}
+
+Node *stmt(){
+    Node *node = expr();
+    expect(";");
+    return node;
+}
+
 Node *expr(){
-    return equality();
+    return assign();
+}
+
+Node *assign(){
+    Node *node = equality();
+    if(consume("=")){
+        node = new_node(ND_ASSIGN, node, assign());
+    }
+    return node;
 }
 
 Node *equality(){
@@ -108,7 +147,14 @@ Node *unray(){
 Node *primary(){
     if(consume("(")){
         Node *node = expr();
-        consume(")");
+        expect(")");
+        return node;
+    }
+    Token *tok = consume_ident();
+    if(tok){
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        node->offset = (tok->str[0]-'a'+1)*8;
         return node;
     }
     return new_node_num(expect_number());

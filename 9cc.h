@@ -8,8 +8,11 @@
 #include <string.h>
 #include <ctype.h>
 
+#define MAX_STATEMENTS 100
+
 typedef enum {
     TK_RESERVED,
+    TK_IDENT,
     TK_NUM,
     TK_EOF,
 } TokenKind;
@@ -24,6 +27,8 @@ typedef enum {
     ND_NE,  // !=
     ND_LT,  // <
     ND_LE,  // <=
+    ND_ASSIGN,
+    ND_LVAR,
 } NodeKind;
 
 typedef struct Token Token;
@@ -42,6 +47,7 @@ struct Node {
     Node *lhs;
     Node *rhs;
     int val;
+    int offset;  // 左辺値のときのみ使う
 };
 
 void error(char *fmt, ...);
@@ -49,20 +55,22 @@ void error_at(char *loc, char *fmt, ...);
 
 Token *tokenize();
 
-bool consume(char *op);
-int expect_number();
-
-Node *primary();
-Node *unray();
-Node *mul();
+// parser
+void *program();
+Node *stmt();
 Node *expr();
+Node *assign();
 Node *equality();
 Node *relational();
 Node *add();
+Node *mul();
+Node *unray();
+Node *primary();
 
 void gen(Node * node);
 
 Token *token;
 char *user_input;
+Node *code[MAX_STATEMENTS];
 
 #endif
