@@ -1,12 +1,12 @@
 #ifndef NINECC_H
 #define NINECC_H
 
+#include <ctype.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdarg.h>
 #include <string.h>
-#include <ctype.h>
 
 #define MAX_STATEMENTS 100
 #define MAX_LOCAL_VAR 100
@@ -78,7 +78,7 @@ Node *mul();
 Node *unray();
 Node *primary();
 
-void gen(Node * node);
+void gen(Node *node);
 
 Token *token;
 char *user_input;
