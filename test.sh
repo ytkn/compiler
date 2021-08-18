@@ -35,5 +35,6 @@ assert 1 "2*3+4 < 10-3+5*2;"
 assert 1 "48/4 == 10-3+10/2;"
 assert 13 "a=1; b = 12; a+b;"
 assert 1 "a=1; b = 12; a*b-11;"
+assert 190 "aa=10; Aba=20; x=10; aa*Aba-x;"
 
 echo OK

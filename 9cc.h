@@ -9,6 +9,7 @@
 #include <ctype.h>
 
 #define MAX_STATEMENTS 100
+#define MAX_LOCAL_VAR 100
 
 typedef enum {
     TK_RESERVED,
@@ -33,6 +34,7 @@ typedef enum {
 
 typedef struct Token Token;
 typedef struct Node Node;
+typedef struct LVar LVar;
 
 struct Token {
     TokenKind kind;
@@ -48,6 +50,13 @@ struct Node {
     Node *rhs;
     int val;
     int offset;  // 左辺値のときのみ使う
+};
+
+struct LVar {
+    LVar *next;
+    char *name;
+    int len;
+    int offset;
 };
 
 void error(char *fmt, ...);
@@ -72,5 +81,6 @@ void gen(Node * node);
 Token *token;
 char *user_input;
 Node *code[MAX_STATEMENTS];
+LVar *locals;
 
 #endif

@@ -34,6 +34,10 @@ bool startswith(char *p, char *q) {
   return memcmp(p, q, strlen(q)) == 0;
 }
 
+bool is_alphabet(char c){
+    return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
+}
+
 Token *tokenize(){
     char *p = user_input;
     Token head;
@@ -51,9 +55,13 @@ Token *tokenize(){
             continue;
         }
 
-        if('a' <= *p && *p <= 'z'){
-            cur = new_token(TK_IDENT, cur, p, 1);
-            p++;
+        if(is_alphabet(*p)){
+            int len = 0;
+            char *q = p;
+            while(is_alphabet(*p)){
+                p++;
+            }
+            cur = new_token(TK_IDENT, cur, q, p-q);
             continue;
         }
 
