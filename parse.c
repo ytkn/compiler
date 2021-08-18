@@ -12,6 +12,13 @@ bool consume(char *op){
     return true;
 }
 
+Token *consume_kind_of(TokenKind kind){
+    if(token->kind != kind) return NULL;
+    Token *tok = token;
+    token = token->next;
+    return tok;
+}
+
 Token *consume_ident(){
     if(token->kind != TK_IDENT) return NULL;
     Token *tok = token;
@@ -68,6 +75,13 @@ void *program(){
 }
 
 Node *stmt(){
+    if(consume_kind_of(TK_RETURN)){
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_RETURN;
+        node->lhs = expr();
+        expect(";");
+        return node;
+    }
     Node *node = expr();
     expect(";");
     return node;

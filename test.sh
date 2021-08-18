@@ -36,5 +36,7 @@ assert 1 "48/4 == 10-3+10/2;"
 assert 13 "a=1; b = 12; a+b;"
 assert 1 "a=1; b = 12; a*b-11;"
 assert 190 "aa=10; Aba=20; x=10; aa*Aba-x;"
+assert 96  "ten=10; two=2; ret=ten*two; return (ret+12)*3;"
+assert 25  "one=1; two=2; aa=one+two; return (aa+12)/3+20;"
 
 echo OK
