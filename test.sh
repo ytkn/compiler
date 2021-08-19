@@ -39,5 +39,7 @@ assert 190 "aa=10; Aba=20; x=10; aa*Aba-x;"
 assert 96  "ten=10; two=2; ret=ten*two; return (ret+12)*3;"
 assert 96 "ten=10; two=2; ret=ten*two; return (ret+12)*3; x=ten+two; return 100;"
 assert 25  "one=1; two=2; aa=one+two; return (aa+12)/3+20;"
+assert 33 "a=1; if(a!=1) return 10; else a=a+1; if(a==2) return 33;"
+assert 10 "a=1; if(a==1) return 10; else a=a+1; if(a==2) return 33;"
 
 echo OK
