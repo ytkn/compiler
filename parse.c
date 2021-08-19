@@ -28,7 +28,7 @@ Token *consume_ident() {
 
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
-        error("'%s'ではありません", op);
+        error_at(token->str, "'%s'ではありません", op);
     token = token->next;
 }
 
@@ -82,6 +82,44 @@ Node *stmt() {
         expect(";");
         return node;
     }
+
+    if (consume_kind_of(TK_IF)) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_IF;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->then = stmt();
+        if(consume_kind_of(TK_ELSE)){
+            node->els = stmt();
+        }
+        return node;
+    }
+
+    if (consume_kind_of(TK_FOR)) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_FOR;
+        expect("(");
+        node->init = expr();
+        expect(";");
+        node->cond = expr();
+        expect(";");
+        node->inc = expr();
+        expect(")");
+        node->body = stmt();
+        return node;
+    }
+
+    if (consume_kind_of(TK_WHILE)) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->body = stmt();
+        return node;
+    }
+
     Node *node = expr();
     expect(";");
     return node;

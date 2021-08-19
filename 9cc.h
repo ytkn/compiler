@@ -17,6 +17,10 @@ typedef enum {
     TK_NUM,
     TK_EOF,
     TK_RETURN,
+    TK_IF,
+    TK_ELSE,
+    TK_FOR,
+    TK_WHILE,
 } TokenKind;
 
 typedef enum {
@@ -32,6 +36,9 @@ typedef enum {
     ND_ASSIGN,
     ND_LVAR,
     ND_RETURN,
+    ND_IF,
+    ND_FOR,
+    ND_WHILE,
 } NodeKind;
 
 typedef struct Token Token;
@@ -52,6 +59,16 @@ struct Node {
     Node *rhs;
     int val;
     int offset;  // 左辺値のときのみ使う
+
+    // "if" ( cond ) then "else" els
+    // "for" ( init; cond; inc ) body
+    // "while" ( cond ) body
+    Node *cond;
+    Node *then;
+    Node *els;
+    Node *init;
+    Node *inc;
+    Node *body;
 };
 
 struct LVar {
@@ -84,5 +101,6 @@ Token *token;
 char *user_input;
 Node *code[MAX_STATEMENTS];
 LVar *locals;
+int n_controls; // 制御構文の番号
 
 #endif
