@@ -41,5 +41,7 @@ assert 96 "ten=10; two=2; ret=ten*two; return (ret+12)*3; x=ten+two; return 100;
 assert 25  "one=1; two=2; aa=one+two; return (aa+12)/3+20;"
 assert 33 "a=1; if(a!=1) return 10; else a=a+1; if(a==2) return 33;"
 assert 10 "a=1; if(a==1) return 10; else a=a+1; if(a==2) return 33;"
+assert 11 "a=1; for(b=0; b < 10; b=b+1) a=a+1; return a;"
+assert 6 "a=1; for(b=1; b <= 10; b=b+2) a=a+1; return a;"
 
 echo OK

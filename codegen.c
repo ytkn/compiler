@@ -50,6 +50,19 @@ void gen(Node *node) {
             printf(".Lend%d:", n_controls);
             n_controls++;
             return;
+        case ND_FOR:
+            gen(node->init);
+            printf(".Lbegin%d:", n_controls);
+            gen(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lend%d\n", n_controls);
+            gen(node->body);
+            gen(node->inc);
+            printf("    jmp .Lbegin%d\n", n_controls);
+            printf(".Lend%d:", n_controls);
+            n_controls++;
+            return;
     }
     gen(node->lhs);
     gen(node->rhs);

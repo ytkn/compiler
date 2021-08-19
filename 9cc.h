@@ -19,6 +19,8 @@ typedef enum {
     TK_RETURN,
     TK_IF,
     TK_ELSE,
+    TK_FOR,
+    TK_WHILE,
 } TokenKind;
 
 typedef enum {
@@ -35,6 +37,8 @@ typedef enum {
     ND_LVAR,
     ND_RETURN,
     ND_IF,
+    ND_FOR,
+    ND_WHILE,
 } NodeKind;
 
 typedef struct Token Token;
@@ -57,9 +61,13 @@ struct Node {
     int offset;  // 左辺値のときのみ使う
 
     // "if" ( cond ) then "else" els
+    // "for" ( init; cond; inc ) body
     Node *cond;
     Node *then;
     Node *els;
+    Node *init;
+    Node *inc;
+    Node *body;
 };
 
 struct LVar {

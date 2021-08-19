@@ -65,6 +65,18 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "for") && !is_alnum(3)) {
+            cur = new_token(TK_FOR, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
+        if (startswith(p, "while") && !is_alnum(5)) {
+            cur = new_token(TK_WHILE, cur, p, 5);
+            p += 5;
+            continue;
+        }
+
         if (startswith(p, "else") && !is_alnum(4)) {
             cur = new_token(TK_ELSE, cur, p, 4);
             p += 4;
