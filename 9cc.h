@@ -62,6 +62,7 @@ struct Node {
 
     // "if" ( cond ) then "else" els
     // "for" ( init; cond; inc ) body
+    // "while" ( cond ) body
     Node *cond;
     Node *then;
     Node *els;

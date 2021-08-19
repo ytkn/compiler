@@ -8,6 +8,7 @@ void gen_lval(Node *node) {
 }
 
 void gen(Node *node) {
+    int control_idx = -1;
     switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);
@@ -35,33 +36,45 @@ void gen(Node *node) {
             return;
         case ND_IF:
             gen(node->cond);
+            control_idx = n_controls++;
             printf("    pop rax\n");
             printf("    cmp rax, 0\n");
             if(node->els){
-                printf("    je .Lelse%d\n", n_controls);
+                printf("    je .Lelse%d\n", control_idx);
                 gen(node->then);
-                printf("    jmp .Lend%d\n", n_controls);
-                printf(".Lelse%d:", n_controls);
+                printf("    jmp .Lend%d\n", control_idx);
+                printf(".Lelse%d:", control_idx);
                 gen(node->els);
             }else{
-                printf("    je .Lend%d\n", n_controls);
+                printf("    je .Lend%d\n", control_idx);
                 gen(node->then);
             }
-            printf(".Lend%d:", n_controls);
-            n_controls++;
+            printf(".Lend%d:", control_idx);
             return;
         case ND_FOR:
             gen(node->init);
-            printf(".Lbegin%d:", n_controls);
+            control_idx = n_controls++;
+            printf(".Lbegin%d:", control_idx);
             gen(node->cond);
             printf("    pop rax\n");
             printf("    cmp rax, 0\n");
-            printf("    je .Lend%d\n", n_controls);
+            printf("    je .Lend%d\n", control_idx);
             gen(node->body);
             gen(node->inc);
-            printf("    jmp .Lbegin%d\n", n_controls);
-            printf(".Lend%d:", n_controls);
-            n_controls++;
+            printf("    jmp .Lbegin%d\n", control_idx);
+            printf(".Lend%d:", control_idx);
+            return;
+        case ND_WHILE:
+            control_idx = n_controls++;
+            printf(".Lbegin%d:", control_idx);
+            gen(node->cond);
+            printf("    pop rax\n");
+            printf("    cmp rax, 0\n");
+            printf("    je .Lend%d\n", control_idx);
+            gen(node->body);
+            printf("    jmp .Lbegin%d\n", control_idx);
+            printf(".Lend%d:", control_idx);
+            control_idx++;
             return;
     }
     gen(node->lhs);

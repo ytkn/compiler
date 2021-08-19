@@ -110,6 +110,16 @@ Node *stmt() {
         return node;
     }
 
+    if (consume_kind_of(TK_WHILE)) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_WHILE;
+        expect("(");
+        node->cond = expr();
+        expect(")");
+        node->body = stmt();
+        return node;
+    }
+
     Node *node = expr();
     expect(";");
     return node;

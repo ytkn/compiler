@@ -43,5 +43,8 @@ assert 33 "a=1; if(a!=1) return 10; else a=a+1; if(a==2) return 33;"
 assert 10 "a=1; if(a==1) return 10; else a=a+1; if(a==2) return 33;"
 assert 11 "a=1; for(b=0; b < 10; b=b+1) a=a+1; return a;"
 assert 6 "a=1; for(b=1; b <= 10; b=b+2) a=a+1; return a;"
+assert 12 "a=0; while(a <= 10) a=a+3; return a;"
+assert 11 "a=0; while(a <= 10) a=a+1; return a;"
+assert 100 "a=0; for(b=0; b < 10; b=b+1) for(c=0; c < 10; c=c+1) a=a+1; return a;"
 
 echo OK
