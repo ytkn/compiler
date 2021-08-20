@@ -1,4 +1,5 @@
 #include "9cc.h"
+#include "vector.h"
 
 bool at_eof() {
     return token->kind == TK_EOF;
@@ -90,7 +91,7 @@ Node *stmt() {
         node->cond = expr();
         expect(")");
         node->then = stmt();
-        if(consume_kind_of(TK_ELSE)){
+        if (consume_kind_of(TK_ELSE)) {
             node->els = stmt();
         }
         return node;
@@ -118,6 +119,16 @@ Node *stmt() {
         expect(")");
         node->body = stmt();
         return node;
+    }
+
+    if (consume("{")) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_BLOCK;
+        node->stmts = create_vector();
+        while (true) {
+            if (consume("}")) return node;
+            push_vector(node->stmts, stmt());
+        }
     }
 
     Node *node = expr();

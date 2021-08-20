@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "vector.h"
 
 #define MAX_STATEMENTS 100
 #define MAX_LOCAL_VAR 100
@@ -39,6 +40,8 @@ typedef enum {
     ND_IF,
     ND_FOR,
     ND_WHILE,
+    ND_BLOCK,
+    ND_FUNC,
 } NodeKind;
 
 typedef struct Token Token;
@@ -69,6 +72,9 @@ struct Node {
     Node *init;
     Node *inc;
     Node *body;
+
+    // statements
+    Vector *stmts;
 };
 
 struct LVar {
