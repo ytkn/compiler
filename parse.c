@@ -1,6 +1,12 @@
 #include "9cc.h"
 #include "vector.h"
 
+void parse_error(char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    error_at(token->str, fmt, ap);
+}
+
 bool at_eof() {
     return token->kind == TK_EOF;
 }
@@ -65,14 +71,40 @@ LVar *find_lvar(Token *tok) {
 }
 
 void *program() {
+    prog = calloc(1, sizeof(Program));
+    prog->funcs = create_vector();
+    while (!at_eof()) {
+        push_vector(prog->funcs, function());
+    }
+}
+
+Function *function() {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_FUNC;
+    node->stmts = create_vector();
     locals = calloc(1, sizeof(LVar));
     locals->len = 0;
     locals->offset = 0;
-    int i = 0;
-    while (!at_eof()) {
-        code[i++] = stmt();
+    Function *fn = calloc(1, sizeof(Function));
+    fn->locals = locals;
+    fn->node = node;
+    Token *tok = consume_ident();
+    fn->name = tok->str;
+    fn->name_len = tok->len;
+    expect("(");
+    while (true) {
+        Token *param = consume_ident();
+        if (param) {
+            if (consume(",")) continue;
+        }
+        expect(")");
+        break;
     }
-    code[i] = NULL;
+    expect("{");
+    while (!consume("}")) {
+        push_vector(node->stmts, stmt());
+    }
+    return fn;
 }
 
 Node *stmt() {
@@ -225,21 +257,52 @@ Node *primary() {
     }
     Token *tok = consume_ident();
     if (tok) {
-        Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-        LVar *lvar = find_lvar(tok);
-        if (lvar) {
-            node->offset = lvar->offset;
-        } else {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->offset = locals->offset + 8;
-            node->offset = lvar->offset;
-            lvar->len = tok->len;
-            locals = lvar;
+        if (consume("(")) {  // 関数呼び出し
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_CALL;
+            node->args = create_vector();
+            while (true) {
+                Token *arg = consume_kind_of(TK_NUM);
+                if (arg) {
+                    Node *arg_node = calloc(1, sizeof(Node));
+                    arg_node->kind = ND_NUM;
+                    arg_node->val = tok->val;
+                    push_vector(node->args, arg_node);
+                    if (consume(",")) continue;
+                    break;
+                }
+                arg = consume_kind_of(TK_IDENT);
+                if (arg) {
+                    Node *arg_node = calloc(1, sizeof(Node));
+                    LVar *lvar = find_lvar(arg);
+                    if (!lvar) parse_error("存在しない変数です");
+                    arg_node->kind = ND_LVAR;
+                    arg_node->offset = lvar->offset;
+                    push_vector(node->args, arg_node);
+                    if (consume(",")) continue;
+                    break;
+                }
+                break;
+            }
+            expect(")");
+            return node;
+        } else {  // 左辺値
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_LVAR;
+            LVar *lvar = find_lvar(tok);
+            if (lvar) {
+                node->offset = lvar->offset;
+            } else {
+                lvar = calloc(1, sizeof(LVar));
+                lvar->next = locals;
+                lvar->name = tok->str;
+                lvar->offset = locals->offset + 8;
+                node->offset = lvar->offset;
+                lvar->len = tok->len;
+                locals = lvar;
+            }
+            return node;
         }
-        return node;
     }
     return new_node_num(expect_number());
 }

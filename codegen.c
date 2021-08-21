@@ -7,6 +7,14 @@ void gen_lval(Node *node) {
     printf("    push rax\n");
 }
 
+void gen_func(Function *func){
+    // TODO: いい方法ないんか？
+    fprintf(stderr, "gen func:");
+    for(int i = 0; i < func->name_len; i++) fprintf(stderr, "%c", func->name[i]);
+    fprintf(stderr, "\n");
+    gen(func->node);
+}
+
 void gen(Node *node) {
     int control_idx = -1;
     switch (node->kind) {
@@ -75,6 +83,19 @@ void gen(Node *node) {
             printf("    jmp .Lbegin%d\n", control_idx);
             printf(".Lend%d:", control_idx);
             control_idx++;
+            return;
+        case ND_BLOCK:
+            fprintf(stderr, "reached block\n");
+            for(int i = 0; i < node->stmts->size; i++){
+                gen((Node*)node->stmts->data[i]);
+                printf("    pop rax\n");
+            }
+            return;
+        case ND_CALL:
+            fprintf(stderr, "reached call\n");
+            return;
+        case ND_FUNC:
+            fprintf(stderr, "reached func\n");
             return;
     }
     gen(node->lhs);

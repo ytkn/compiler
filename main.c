@@ -41,8 +41,8 @@ int main(int argc, char** argv) {
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
     printf("    sub rsp, 208\n");
-    for (int i = 0; code[i]; i++) {
-        gen(code[i]);
+    for (int i = 0; prog->funcs->size; i++) {
+        gen_func(prog->funcs->data[i]);
         printf("    pop rax\n");
     }
     printf("    mov rsp, rbp\n");

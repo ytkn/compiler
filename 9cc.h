@@ -41,12 +41,26 @@ typedef enum {
     ND_FOR,
     ND_WHILE,
     ND_BLOCK,
-    ND_FUNC,
+    ND_CALL,      // Function call
+    ND_FUNC,      // Function definition
 } NodeKind;
 
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct LVar LVar;
+typedef struct Program Program;
+typedef struct Function Function;
+
+struct Program {
+    Vector *funcs;
+};
+
+struct Function {
+    LVar *locals;
+    char *name;
+    int name_len;
+    Node *node;
+};
 
 struct Token {
     TokenKind kind;
@@ -72,8 +86,9 @@ struct Node {
     Node *init;
     Node *inc;
     Node *body;
-
-    // statements
+    // func call (vector of Node* (should be LVar or Num))
+    Vector *args;
+    // statements (vector of Node*)
     Vector *stmts;
 };
 
@@ -91,6 +106,7 @@ Token *tokenize();
 
 // parser
 void *program();
+Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -102,7 +118,9 @@ Node *unray();
 Node *primary();
 
 void gen(Node *node);
+void gen_func(Function *func);
 
+Program *prog;
 Token *token;
 char *user_input;
 Node *code[MAX_STATEMENTS];
