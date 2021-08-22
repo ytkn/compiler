@@ -1,6 +1,12 @@
 #include "9cc.h"
 #include "vector.h"
 
+char *token_kind_to_str(TokenKind kind) {
+    if (kind == TK_INT) return "int";
+    if (kind == TK_IDENT) return "識別子";
+    return "please update token_kind_to_str";
+}
+
 void parse_error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -37,6 +43,14 @@ void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
         error_at(token->str, "'%s'ではありません", op);
     token = token->next;
+}
+
+Token *expect_kind_of(TokenKind kind) {
+    if (token->kind != kind)
+        error_at(token->str, "%sではありません\n", token_kind_to_str(kind));
+    Token *tok = token;
+    token = token->next;
+    return tok;
 }
 
 int expect_number() {
@@ -118,6 +132,7 @@ void *program() {
 }
 
 Function *function() {
+    expect_kind_of(TK_INT);
     Token *tok = consume_ident();
     Node *node = new_node_func_def();
     Function *fn = new_func(tok->str, tok->len, node);
@@ -125,8 +140,8 @@ Function *function() {
     params = fn->params;
     expect("(");
     while (true) {
-        Token *param = consume_ident();
-        if (param) {
+        if (consume_kind_of(TK_INT)) {
+            Token *param = expect_kind_of(TK_IDENT);
             LVar *lvar = calloc(1, sizeof(LVar));
             lvar->name = param->str;
             lvar->len = param->len;
@@ -297,10 +312,21 @@ Node *unray() {
     }
 }
 
+// なんか汚いよなあ。。
 Node *primary() {
     if (consume("(")) {
         Node *node = expr();
         expect(")");
+        return node;
+    }
+    if (consume_kind_of(TK_INT)) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        Token *tok = expect_kind_of(TK_IDENT);
+        if (find_lvar(tok)) parse_error("すでに定義された変数です\n");
+        LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
+        node->offset = lvar->offset;
+        push_vector(locals, lvar);
         return node;
     }
     Token *tok = consume_ident();
@@ -318,13 +344,8 @@ Node *primary() {
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             LVar *lvar = find_lvar(tok);
-            if (lvar) {
-                node->offset = lvar->offset;
-            } else {
-                lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
-                node->offset = lvar->offset;
-                push_vector(locals, lvar);
-            }
+            if (!lvar) parse_error("存在しない変数です\n");
+            node->offset = lvar->offset;
             return node;
         }
     }

@@ -89,6 +89,12 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "int") && !is_alnum(3)) {
+            cur = new_token(TK_INT, cur, p, 3);
+            p += 3;
+            continue;
+        }
+
         if (is_alphabet(*p)) {
             int len = 0;
             char *q = p;

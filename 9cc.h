@@ -20,6 +20,7 @@ typedef enum {
     TK_ELSE,
     TK_FOR,
     TK_WHILE,
+    TK_INT,
 } TokenKind;
 
 typedef enum {
