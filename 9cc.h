@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "vector.h"
 
 #define MAX_STATEMENTS 100
 #define MAX_LOCAL_VAR 100
@@ -39,11 +40,28 @@ typedef enum {
     ND_IF,
     ND_FOR,
     ND_WHILE,
+    ND_BLOCK,
+    ND_CALL,      // Function call
+    ND_FUNC,      // Function definition
 } NodeKind;
 
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct LVar LVar;
+typedef struct Program Program;
+typedef struct Function Function;
+
+struct Program {
+    Vector *funcs;
+};
+
+struct Function {
+    Vector *locals;
+    char *name;
+    int name_len;
+    Node *node;
+    Vector *params;
+};
 
 struct Token {
     TokenKind kind;
@@ -60,6 +78,10 @@ struct Node {
     int val;
     int offset;  // 左辺値のときのみ使う
 
+    // func name
+    char *name;
+    int name_len;
+
     // "if" ( cond ) then "else" els
     // "for" ( init; cond; inc ) body
     // "while" ( cond ) body
@@ -69,10 +91,14 @@ struct Node {
     Node *init;
     Node *inc;
     Node *body;
+
+    // func call (vector of Node* (should be LVar or Num))
+    Vector *args;
+    // statements (vector of Node*)
+    Vector *stmts;
 };
 
 struct LVar {
-    LVar *next;
     char *name;
     int len;
     int offset;
@@ -85,6 +111,7 @@ Token *tokenize();
 
 // parser
 void *program();
+Function *function();
 Node *stmt();
 Node *expr();
 Node *assign();
@@ -96,11 +123,16 @@ Node *unray();
 Node *primary();
 
 void gen(Node *node);
+void gen_func(Function *func);
 
+Program *prog;
 Token *token;
 char *user_input;
 Node *code[MAX_STATEMENTS];
-LVar *locals;
 int n_controls; // 制御構文の番号
+
+// parse中の関数に関するもの
+Vector *params;
+Vector *locals;
 
 #endif

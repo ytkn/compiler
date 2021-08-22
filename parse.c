@@ -1,4 +1,11 @@
 #include "9cc.h"
+#include "vector.h"
+
+void parse_error(char *fmt, ...) {
+    va_list ap;
+    va_start(ap, fmt);
+    error_at(token->str, fmt, ap);
+}
 
 bool at_eof() {
     return token->kind == TK_EOF;
@@ -57,21 +64,69 @@ Node *new_node_num(int val) {
 }
 
 LVar *find_lvar(Token *tok) {
-    for (LVar *var = locals; var; var = var->next) {
+    for (int i = 0; i < locals->size; i++) {
+        LVar *var = locals->data[i];
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+    }
+    for (int i = 0; i < params->size; i++) {
+        LVar *var = params->data[i];
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
     }
     return NULL;
 }
 
+LVar *create_lvar(char *name, int len, int offset){
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->name = name;
+    lvar->len = len;
+    lvar->offset = offset;
+    return lvar;
+}
+
 void *program() {
-    locals = calloc(1, sizeof(LVar));
-    locals->len = 0;
-    locals->offset = 0;
-    int i = 0;
+    prog = calloc(1, sizeof(Program));
+    prog->funcs = create_vector();
     while (!at_eof()) {
-        code[i++] = stmt();
+        push_vector(prog->funcs, function());
     }
-    code[i] = NULL;
+}
+
+Function *function() {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_FUNC;
+    node->stmts = create_vector();
+    locals = create_vector();
+    params = create_vector();
+    Function *fn = calloc(1, sizeof(Function));
+    fn->node = node;
+    Token *tok = consume_ident();
+    fn->name = tok->str;
+    fn->name_len = tok->len;
+    expect("(");
+    while (true) {
+        Token *param = consume_ident();
+        if (param) {
+            LVar *lvar = calloc(1, sizeof(LVar));
+            lvar->name = param->str;
+            lvar->len = param->len;
+            push_vector(params, lvar);
+            if (consume(",")) continue;
+        }
+        expect(")");
+        break;
+    }
+    // offsetの調整
+    for (int i = 0; i < params->size; i++) {
+        LVar *var = params->data[i];
+        var->offset = -(params->size + 1 - i) * 8;
+    }
+    expect("{");
+    while (!consume("}")) {
+        push_vector(node->stmts, stmt());
+    }
+    fn->locals = locals;
+    fn->params = params;
+    return fn;
 }
 
 Node *stmt() {
@@ -90,7 +145,7 @@ Node *stmt() {
         node->cond = expr();
         expect(")");
         node->then = stmt();
-        if(consume_kind_of(TK_ELSE)){
+        if (consume_kind_of(TK_ELSE)) {
             node->els = stmt();
         }
         return node;
@@ -118,6 +173,16 @@ Node *stmt() {
         expect(")");
         node->body = stmt();
         return node;
+    }
+
+    if (consume("{")) {
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_BLOCK;
+        node->stmts = create_vector();
+        while (true) {
+            if (consume("}")) return node;
+            push_vector(node->stmts, stmt());
+        }
     }
 
     Node *node = expr();
@@ -214,21 +279,32 @@ Node *primary() {
     }
     Token *tok = consume_ident();
     if (tok) {
-        Node *node = calloc(1, sizeof(Node));
-        node->kind = ND_LVAR;
-        LVar *lvar = find_lvar(tok);
-        if (lvar) {
-            node->offset = lvar->offset;
-        } else {
-            lvar = calloc(1, sizeof(LVar));
-            lvar->next = locals;
-            lvar->name = tok->str;
-            lvar->offset = locals->offset + 8;
-            node->offset = lvar->offset;
-            lvar->len = tok->len;
-            locals = lvar;
+        if (consume("(")) {  // 関数呼び出し
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_CALL;
+            node->name = tok->str;
+            node->name_len = tok->len;
+            node->args = create_vector();
+            while (true) {
+                if(consume(")")) break;
+                push_vector(node->args, equality());
+                if(consume(")")) break;
+                expect(",");
+            }
+            return node;
+        } else {  // 左辺値
+            Node *node = calloc(1, sizeof(Node));
+            node->kind = ND_LVAR;
+            LVar *lvar = find_lvar(tok);
+            if (lvar) {
+                node->offset = lvar->offset;
+            } else {
+                lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
+                node->offset = lvar->offset;
+                push_vector(locals, lvar);
+            }
+            return node;
         }
-        return node;
     }
     return new_node_num(expect_number());
 }
