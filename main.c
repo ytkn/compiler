@@ -37,7 +37,6 @@ int main(int argc, char** argv) {
     printf(".intel_syntax noprefix\n");
     for (int i = 0; i < prog->funcs->size; i++) {
         gen_func(prog->funcs->data[i]);
-        // printf("    pop rax\n");
     }
     return 0;
 }

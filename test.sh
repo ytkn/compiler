@@ -66,6 +66,20 @@ main(){
 }
 "
 
+assert 110 "
+sum(a, b){
+    ans = 0;
+    for(i = a; i <= b; i=i+1){
+        ans = ans+i;
+        ans = ans+i;
+    }
+    return ans;
+}
+main(){
+    return sum(1, 10);
+}
+"
+
 assert 2 "
 sub(a, b){
     return a-b;
@@ -80,5 +94,6 @@ main(){
     return gcd(10, 32); 
 }
 "
+
 
 echo OK
