@@ -285,8 +285,15 @@ Node *unray() {
     } else if (consume("+")) {
         Node *node = primary();
         return node;
+    } else if (consume("*")) {
+        Node *node = new_node(ND_DEREF, unray(), NULL);
+        return node;
+    } else if (consume("&")) {
+        Node *node = new_node(ND_ADDR, unray(), NULL);
+        return node;
     } else {
         Node *node = primary();
+        return node;
     }
 }
 
