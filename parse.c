@@ -323,7 +323,7 @@ Node *primary() {
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
         Token *tok = expect_kind_of(TK_IDENT);
-        if (find_lvar(tok)) parse_error("すでに定義された変数です\n");
+        if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
         LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
         node->offset = lvar->offset;
         push_vector(locals, lvar);
@@ -344,7 +344,7 @@ Node *primary() {
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             LVar *lvar = find_lvar(tok);
-            if (!lvar) parse_error("存在しない変数です\n");
+            if (!lvar) error_at(tok->str, "存在しない変数です\n");
             node->offset = lvar->offset;
             return node;
         }
