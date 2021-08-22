@@ -64,7 +64,12 @@ Node *new_node_num(int val) {
 }
 
 LVar *find_lvar(Token *tok) {
-    for (LVar *var = locals; var; var = var->next) {
+    for (int i = 0; i < locals->size; i++) {
+        LVar *var = locals->data[i];
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+    }
+    for (int i = 0; i < params->size; i++) {
+        LVar *var = params->data[i];
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
     }
     return NULL;
@@ -82,9 +87,8 @@ Function *function() {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_FUNC;
     node->stmts = create_vector();
-    locals = calloc(1, sizeof(LVar));
-    locals->len = 0;
-    locals->offset = 0;
+    locals = create_vector();
+    params = create_vector();
     Function *fn = calloc(1, sizeof(Function));
     fn->node = node;
     Token *tok = consume_ident();
@@ -94,16 +98,26 @@ Function *function() {
     while (true) {
         Token *param = consume_ident();
         if (param) {
+            LVar *lvar = calloc(1, sizeof(LVar));
+            lvar->name = param->str;
+            lvar->len = param->len;
+            push_vector(params, lvar);
             if (consume(",")) continue;
         }
         expect(")");
         break;
+    }
+    // offsetの調整
+    for (int i = 0; i < params->size; i++) {
+        LVar *var = params->data[i];
+        var->offset = -(params->size + 1 - i) * 8;
     }
     expect("{");
     while (!consume("}")) {
         push_vector(node->stmts, stmt());
     }
     fn->locals = locals;
+    fn->params = params;
     return fn;
 }
 
@@ -262,8 +276,8 @@ Node *primary() {
             node->kind = ND_CALL;
             node->name = tok->str;
             node->name_len = tok->len;
-            fprintf(stderr, "func call:%s", node->name);
             node->args = create_vector();
+            // TODO: 左辺値と即値しか入れられないのを直したい。
             while (true) {
                 Token *arg = consume_kind_of(TK_NUM);
                 if (arg) {
@@ -290,21 +304,18 @@ Node *primary() {
             expect(")");
             return node;
         } else {  // 左辺値
-            // TODO: 関数の引数というパターンがあるんじゃ？
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             LVar *lvar = find_lvar(tok);
             if (lvar) {
                 node->offset = lvar->offset;
             } else {
-                fprintf(stderr, "create lvar: %s\n", tok->str);
                 lvar = calloc(1, sizeof(LVar));
-                lvar->next = locals;
                 lvar->name = tok->str;
                 lvar->len = tok->len;
-                lvar->offset = locals->offset + 8;
+                lvar->offset = (locals->size + 1) * 8;
                 node->offset = lvar->offset;
-                locals = lvar;
+                push_vector(locals, lvar);
             }
             return node;
         }

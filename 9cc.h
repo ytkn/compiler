@@ -56,7 +56,7 @@ struct Program {
 };
 
 struct Function {
-    LVar *locals;
+    Vector *locals;
     char *name;
     int name_len;
     Node *node;
@@ -99,7 +99,6 @@ struct Node {
 };
 
 struct LVar {
-    LVar *next;
     char *name;
     int len;
     int offset;
@@ -130,8 +129,10 @@ Program *prog;
 Token *token;
 char *user_input;
 Node *code[MAX_STATEMENTS];
-LVar *locals;
 int n_controls; // 制御構文の番号
+
+// parse中の関数に関するもの
 Vector *params;
+Vector *locals;
 
 #endif

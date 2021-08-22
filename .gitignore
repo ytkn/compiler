@@ -5,4 +5,5 @@ a.out
 9cc
 .vscode/
 run.sh
+run_tmp.sh
 syntax.md
