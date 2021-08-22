@@ -7,10 +7,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "vector.h"
 
-#define MAX_STATEMENTS 100
-#define MAX_LOCAL_VAR 100
+#include "vector.h"
 
 typedef enum {
     TK_RESERVED,
@@ -41,8 +39,8 @@ typedef enum {
     ND_FOR,
     ND_WHILE,
     ND_BLOCK,
-    ND_CALL,      // Function call
-    ND_FUNC,      // Function definition
+    ND_CALL,  // Function call
+    ND_FUNC,  // Function definition
 } NodeKind;
 
 typedef struct Token Token;
@@ -128,8 +126,7 @@ void gen_func(Function *func);
 Program *prog;
 Token *token;
 char *user_input;
-Node *code[MAX_STATEMENTS];
-int n_controls; // 制御構文の番号
+int n_controls;  // 制御構文の番号
 
 // parse中の関数に関するもの
 Vector *params;

@@ -63,6 +63,32 @@ Node *new_node_num(int val) {
     return node;
 }
 
+Node *new_node_func_def() {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_FUNC;
+    node->stmts = create_vector();
+    return node;
+}
+
+Node *new_node_func_call(char *name, int len) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_CALL;
+    node->name = name;
+    node->name_len = len;
+    node->args = create_vector();
+    return node;
+}
+
+Function *new_func(char *name, int len, Node *node) {
+    Function *fn = calloc(1, sizeof(Function));
+    fn->locals = create_vector();
+    fn->params = create_vector();
+    fn->name = name;
+    fn->name_len = len;
+    fn->node = node;
+    return fn;
+}
+
 LVar *find_lvar(Token *tok) {
     for (int i = 0; i < locals->size; i++) {
         LVar *var = locals->data[i];
@@ -75,7 +101,7 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-LVar *create_lvar(char *name, int len, int offset){
+LVar *create_lvar(char *name, int len, int offset) {
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = name;
     lvar->len = len;
@@ -92,16 +118,11 @@ void *program() {
 }
 
 Function *function() {
-    Node *node = calloc(1, sizeof(Node));
-    node->kind = ND_FUNC;
-    node->stmts = create_vector();
-    locals = create_vector();
-    params = create_vector();
-    Function *fn = calloc(1, sizeof(Function));
-    fn->node = node;
     Token *tok = consume_ident();
-    fn->name = tok->str;
-    fn->name_len = tok->len;
+    Node *node = new_node_func_def();
+    Function *fn = new_func(tok->str, tok->len, node);
+    locals = fn->locals;
+    params = fn->params;
     expect("(");
     while (true) {
         Token *param = consume_ident();
@@ -124,8 +145,6 @@ Function *function() {
     while (!consume("}")) {
         push_vector(node->stmts, stmt());
     }
-    fn->locals = locals;
-    fn->params = params;
     return fn;
 }
 
@@ -280,15 +299,11 @@ Node *primary() {
     Token *tok = consume_ident();
     if (tok) {
         if (consume("(")) {  // 関数呼び出し
-            Node *node = calloc(1, sizeof(Node));
-            node->kind = ND_CALL;
-            node->name = tok->str;
-            node->name_len = tok->len;
-            node->args = create_vector();
+            Node *node = new_node_func_call(tok->str, tok->len);
             while (true) {
-                if(consume(")")) break;
+                if (consume(")")) break;
                 push_vector(node->args, equality());
-                if(consume(")")) break;
+                if (consume(")")) break;
                 expect(",");
             }
             return node;
