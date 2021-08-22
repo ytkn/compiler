@@ -58,9 +58,7 @@ main(){
 assert 89 "
 fib(a){ 
     if(a <= 1) return 1;
-    b = a-1;
-    c = a-2;
-    return fib(b)+fib(c);
+    return fib(a-1)+fib(a-2);
 }
 
 main(){ 
@@ -69,11 +67,13 @@ main(){
 "
 
 assert 2 "
+sub(a, b){
+    return a-b;
+}
 gcd(a, b){
     if(a > b) return gcd(b, a);
     if(a == 0) return b;
-    c = b-a;
-    return gcd(a, c);   
+    return gcd(a, sub(b, a));   
 }
 
 main(){ 

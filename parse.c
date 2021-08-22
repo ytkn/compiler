@@ -279,29 +279,11 @@ Node *primary() {
             node->args = create_vector();
             // TODO: 左辺値と即値しか入れられないのを直したい。
             while (true) {
-                Token *arg = consume_kind_of(TK_NUM);
-                if (arg) {
-                    Node *arg_node = calloc(1, sizeof(Node));
-                    arg_node->kind = ND_NUM;
-                    arg_node->val = arg->val;
-                    push_vector(node->args, arg_node);
-                    if (consume(",")) continue;
-                    break;
-                }
-                arg = consume_kind_of(TK_IDENT);
-                if (arg) {
-                    Node *arg_node = calloc(1, sizeof(Node));
-                    LVar *lvar = find_lvar(arg);
-                    if (!lvar) parse_error("存在しない変数です");
-                    arg_node->kind = ND_LVAR;
-                    arg_node->offset = lvar->offset;
-                    push_vector(node->args, arg_node);
-                    if (consume(",")) continue;
-                    break;
-                }
-                break;
+                if(consume(")")) break;
+                push_vector(node->args, equality());
+                if(consume(")")) break;
+                expect(",");
             }
-            expect(")");
             return node;
         } else {  // 左辺値
             Node *node = calloc(1, sizeof(Node));
