@@ -75,6 +75,14 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+LVar *create_lvar(char *name, int len, int offset){
+    LVar *lvar = calloc(1, sizeof(LVar));
+    lvar->name = name;
+    lvar->len = len;
+    lvar->offset = offset;
+    return lvar;
+}
+
 void *program() {
     prog = calloc(1, sizeof(Program));
     prog->funcs = create_vector();
@@ -277,7 +285,6 @@ Node *primary() {
             node->name = tok->str;
             node->name_len = tok->len;
             node->args = create_vector();
-            // TODO: 左辺値と即値しか入れられないのを直したい。
             while (true) {
                 if(consume(")")) break;
                 push_vector(node->args, equality());
@@ -292,10 +299,7 @@ Node *primary() {
             if (lvar) {
                 node->offset = lvar->offset;
             } else {
-                lvar = calloc(1, sizeof(LVar));
-                lvar->name = tok->str;
-                lvar->len = tok->len;
-                lvar->offset = (locals->size + 1) * 8;
+                lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
                 node->offset = lvar->offset;
                 push_vector(locals, lvar);
             }
