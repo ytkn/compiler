@@ -60,6 +60,7 @@ struct Function {
     char *name;
     int name_len;
     Node *node;
+    Vector *params;
 };
 
 struct Token {
@@ -77,6 +78,10 @@ struct Node {
     int val;
     int offset;  // 左辺値のときのみ使う
 
+    // func name
+    char *name;
+    int name_len;
+
     // "if" ( cond ) then "else" els
     // "for" ( init; cond; inc ) body
     // "while" ( cond ) body
@@ -86,6 +91,7 @@ struct Node {
     Node *init;
     Node *inc;
     Node *body;
+
     // func call (vector of Node* (should be LVar or Num))
     Vector *args;
     // statements (vector of Node*)
@@ -126,5 +132,6 @@ char *user_input;
 Node *code[MAX_STATEMENTS];
 LVar *locals;
 int n_controls; // 制御構文の番号
+Vector *params;
 
 #endif

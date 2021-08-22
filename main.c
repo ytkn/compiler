@@ -35,18 +35,9 @@ int main(int argc, char** argv) {
     token = tokenize();
     program();
     printf(".intel_syntax noprefix\n");
-    printf(".globl main\n");
-    printf("main:\n");
-    // 変数26個分の領域を確保
-    printf("    push rbp\n");
-    printf("    mov rbp, rsp\n");
-    printf("    sub rsp, 208\n");
-    for (int i = 0; prog->funcs->size; i++) {
+    for (int i = 0; i < prog->funcs->size; i++) {
         gen_func(prog->funcs->data[i]);
-        printf("    pop rax\n");
+        // printf("    pop rax\n");
     }
-    printf("    mov rsp, rbp\n");
-    printf("    pop rbp\n");
-    printf("    ret\n");
     return 0;
 }

@@ -3,16 +3,41 @@
 void gen_lval(Node *node) {
     if (node->kind != ND_LVAR) error("代入の左辺値が変数ではありません");
     printf("    mov rax, rbp\n");
-    printf("    sub rax, %d\n", node->offset);
+    if (node->offset >= 0) {
+        printf("    sub rax, %d\n", node->offset);
+    }else{
+        printf("    add rax, %d\n", -node->offset);
+    }
     printf("    push rax\n");
 }
 
-void gen_func(Function *func){
+void gen_func(Function *func) {
+    char *func_name = calloc(func->name_len + 1, sizeof(char));
+    memcpy(func_name, func->name, func->name_len);
+    fprintf(stderr, "gen func: %s\n", func_name);
+    fprintf(stderr, "locals: %d\n", func->locals->offset);
+    printf(".globl %s\n", func_name);
+    printf("%s:\n", func_name);
+    printf("    push rbp\n");
+    printf("    mov rbp, rsp\n");
+    printf("    sub rsp, %d\n", func->locals->offset);
     // TODO: いい方法ないんか？
-    fprintf(stderr, "gen func:");
-    for(int i = 0; i < func->name_len; i++) fprintf(stderr, "%c", func->name[i]);
-    fprintf(stderr, "\n");
-    gen(func->node);
+    for (int i = 0; i < func->node->stmts->size; i++) {
+        gen(func->node->stmts->data[i]);
+    }
+}
+
+void gen_func_call(Node *node) {
+    char *func_name = calloc(node->name_len + 1, sizeof(char));
+    memcpy(func_name, node->name, node->name_len);
+    fprintf(stderr, "reached call:%s\n", func_name);
+    for(int i = 0; i < node->args->size; i++){
+        Node *arg = (Node*)node->args->data[i];
+        gen(arg);
+    }
+    printf("    call %s\n", func_name);
+    printf("    add rsp, %d\n", node->args->size*8);
+    printf("    push rax\n");
 }
 
 void gen(Node *node) {
@@ -47,13 +72,13 @@ void gen(Node *node) {
             control_idx = n_controls++;
             printf("    pop rax\n");
             printf("    cmp rax, 0\n");
-            if(node->els){
+            if (node->els) {
                 printf("    je .Lelse%d\n", control_idx);
                 gen(node->then);
                 printf("    jmp .Lend%d\n", control_idx);
                 printf(".Lelse%d:", control_idx);
                 gen(node->els);
-            }else{
+            } else {
                 printf("    je .Lend%d\n", control_idx);
                 gen(node->then);
             }
@@ -84,15 +109,16 @@ void gen(Node *node) {
             printf(".Lend%d:", control_idx);
             control_idx++;
             return;
+        // TODO: 理解して実装。関数はparseで足りてないところがあるかも。
         case ND_BLOCK:
             fprintf(stderr, "reached block\n");
-            for(int i = 0; i < node->stmts->size; i++){
-                gen((Node*)node->stmts->data[i]);
+            for (int i = 0; i < node->stmts->size; i++) {
+                gen((Node *)node->stmts->data[i]);
                 printf("    pop rax\n");
             }
             return;
         case ND_CALL:
-            fprintf(stderr, "reached call\n");
+            gen_func_call(node);
             return;
         case ND_FUNC:
             fprintf(stderr, "reached func\n");

@@ -86,7 +86,6 @@ Function *function() {
     locals->len = 0;
     locals->offset = 0;
     Function *fn = calloc(1, sizeof(Function));
-    fn->locals = locals;
     fn->node = node;
     Token *tok = consume_ident();
     fn->name = tok->str;
@@ -104,6 +103,7 @@ Function *function() {
     while (!consume("}")) {
         push_vector(node->stmts, stmt());
     }
+    fn->locals = locals;
     return fn;
 }
 
@@ -260,13 +260,16 @@ Node *primary() {
         if (consume("(")) {  // 関数呼び出し
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_CALL;
+            node->name = tok->str;
+            node->name_len = tok->len;
+            fprintf(stderr, "func call:%s", node->name);
             node->args = create_vector();
             while (true) {
                 Token *arg = consume_kind_of(TK_NUM);
                 if (arg) {
                     Node *arg_node = calloc(1, sizeof(Node));
                     arg_node->kind = ND_NUM;
-                    arg_node->val = tok->val;
+                    arg_node->val = arg->val;
                     push_vector(node->args, arg_node);
                     if (consume(",")) continue;
                     break;
@@ -287,18 +290,20 @@ Node *primary() {
             expect(")");
             return node;
         } else {  // 左辺値
+            // TODO: 関数の引数というパターンがあるんじゃ？
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             LVar *lvar = find_lvar(tok);
             if (lvar) {
                 node->offset = lvar->offset;
             } else {
+                fprintf(stderr, "create lvar: %s\n", tok->str);
                 lvar = calloc(1, sizeof(LVar));
                 lvar->next = locals;
                 lvar->name = tok->str;
+                lvar->len = tok->len;
                 lvar->offset = locals->offset + 8;
                 node->offset = lvar->offset;
-                lvar->len = tok->len;
                 locals = lvar;
             }
             return node;
