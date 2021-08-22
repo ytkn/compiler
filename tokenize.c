@@ -21,7 +21,7 @@ int get_line_len(char *line_start){
     return user_input+n-line_start;
 }
 
-int *get_line_num(char *line_start){
+int get_line_num(char *line_start){
     int line_num = 1;
     for(char *p = user_input; p < line_start; p++){
         if(*p == '\n'){
