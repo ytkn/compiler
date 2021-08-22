@@ -92,7 +92,7 @@ Token *tokenize() {
         if (is_alphabet(*p)) {
             int len = 0;
             char *q = p;
-            while (is_alphabet(*p)) {
+            while (is_alnum(*p)) {
                 p++;
             }
             cur = new_token(TK_IDENT, cur, q, p - q);

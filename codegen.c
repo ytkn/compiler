@@ -111,7 +111,7 @@ void gen(Node *node) {
             return;
         // TODO: 怪しいかも
         case ND_BLOCK:
-            fprintf(stderr, "reached block\n");
+            // fprintf(stderr, "reached block\n");
             for (int i = 0; i < node->stmts->size; i++) {
                 gen((Node *)node->stmts->data[i]);
                 printf("    pop rax\n");
