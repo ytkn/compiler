@@ -1,6 +1,12 @@
 #include "9cc.h"
 #include "vector.h"
 
+char *token_kind_to_str(TokenKind kind) {
+    if (kind == TK_INT) return "int";
+    if (kind == TK_IDENT) return "識別子";
+    return "please update token_kind_to_str";
+}
+
 void parse_error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -37,6 +43,14 @@ void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
         error_at(token->str, "'%s'ではありません", op);
     token = token->next;
+}
+
+Token *expect_kind_of(TokenKind kind) {
+    if (token->kind != kind)
+        error_at(token->str, "%sではありません\n", token_kind_to_str(kind));
+    Token *tok = token;
+    token = token->next;
+    return tok;
 }
 
 int expect_number() {
@@ -101,12 +115,20 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-LVar *create_lvar(char *name, int len, int offset) {
+LVar *create_lvar(char *name, int len, int offset, Type *ty) {
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = name;
     lvar->len = len;
     lvar->offset = offset;
+    lvar->ty = ty;
     return lvar;
+}
+
+Type *create_type(TypeKind kind, Type *ptr_to){
+    Type *type = calloc(1, sizeof(Type));
+    type->ty = kind;
+    type->ptr_to = ptr_to;
+    return type;
 }
 
 void *program() {
@@ -118,6 +140,7 @@ void *program() {
 }
 
 Function *function() {
+    expect_kind_of(TK_INT);
     Token *tok = consume_ident();
     Node *node = new_node_func_def();
     Function *fn = new_func(tok->str, tok->len, node);
@@ -125,11 +148,13 @@ Function *function() {
     params = fn->params;
     expect("(");
     while (true) {
-        Token *param = consume_ident();
-        if (param) {
-            LVar *lvar = calloc(1, sizeof(LVar));
-            lvar->name = param->str;
-            lvar->len = param->len;
+        if (consume_kind_of(TK_INT)) {
+            Type *ty = create_type(TP_INT, NULL);
+            while (consume("*")) {
+                ty = create_type(TP_PTR, ty);
+            }
+            Token *param = expect_kind_of(TK_IDENT);
+            LVar *lvar = create_lvar(param->str, param->len, 0, ty);
             push_vector(params, lvar);
             if (consume(",")) continue;
         }
@@ -285,15 +310,39 @@ Node *unray() {
     } else if (consume("+")) {
         Node *node = primary();
         return node;
+    } else if (consume("*")) {
+        Node *node = new_node(ND_DEREF, unray(), NULL);
+        return node;
+    } else if (consume("&")) {
+        Node *node = new_node(ND_ADDR, unray(), NULL);
+        return node;
     } else {
         Node *node = primary();
+        return node;
     }
 }
 
+// なんか汚いよなあ。。
 Node *primary() {
     if (consume("(")) {
         Node *node = expr();
         expect(")");
+        return node;
+    }
+
+    if (consume_kind_of(TK_INT)) {
+        Type *ty = create_type(TP_INT, NULL);
+        while (consume("*")) {
+            ty = create_type(TP_PTR, ty);
+        }
+        Node *node = calloc(1, sizeof(Node));
+        node->kind = ND_LVAR;
+        node->ty = ty;
+        Token *tok = expect_kind_of(TK_IDENT);
+        if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
+        LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8, ty);
+        node->offset = lvar->offset;
+        push_vector(locals, lvar);
         return node;
     }
     Token *tok = consume_ident();
@@ -311,13 +360,9 @@ Node *primary() {
             Node *node = calloc(1, sizeof(Node));
             node->kind = ND_LVAR;
             LVar *lvar = find_lvar(tok);
-            if (lvar) {
-                node->offset = lvar->offset;
-            } else {
-                lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
-                node->offset = lvar->offset;
-                push_vector(locals, lvar);
-            }
+            if (!lvar) error_at(tok->str, "存在しない変数です\n");
+            node->offset = lvar->offset;
+            node->ty = lvar->ty;
             return node;
         }
     }

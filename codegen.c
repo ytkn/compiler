@@ -1,6 +1,29 @@
 #include "9cc.h"
 
+void gen_lval_deref(Node *node, bool is_root) {
+    if (node->kind == ND_DEREF) {
+        gen_lval_deref(node->lhs, false);
+        if(!is_root){ // 値として入っているアドレスを吐かせる
+            printf("    pop rax\n");
+            printf("    mov rax, [rax]\n");
+            printf("    push rax\n");
+        }
+    }else{
+        if(node->ty->ty != TP_PTR) error("ポインタではありません\n");
+        // 値として入っているアドレスを吐かせる
+        printf("    mov rax, rbp\n");
+        if (node->offset >= 0) printf("    sub rax, %d\n", node->offset);
+        else  printf("    add rax, %d\n", -node->offset);
+        printf("    mov rax, [rax]\n");
+        printf("    push rax\n");
+    }
+}
+
 void gen_lval(Node *node) {
+    if (node->kind == ND_DEREF) {
+        gen_lval_deref(node, true);
+        return;
+    }
     if (node->kind != ND_LVAR) error("代入の左辺値が変数ではありません");
     printf("    mov rax, rbp\n");
     if (node->offset >= 0) {
@@ -48,6 +71,15 @@ void gen(Node *node) {
             return;
         case ND_LVAR:
             gen_lval(node);
+            printf("    pop rax\n");
+            printf("    mov rax, [rax]\n");
+            printf("    push rax\n");
+            return;
+        case ND_ADDR:
+            gen_lval(node->lhs);
+            return;
+        case ND_DEREF:
+            gen(node->lhs);
             printf("    pop rax\n");
             printf("    mov rax, [rax]\n");
             printf("    push rax\n");
