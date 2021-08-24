@@ -1,36 +1,5 @@
 #include "9cc.h"
 
-char *get_line_start(char *loc){
-    int n = strlen(user_input);
-    char *ret = user_input;
-    for(char *p = user_input; p < loc; p++){
-        if(*p == '\n'){
-            ret = p+1;
-        }
-    }
-    return ret;
-}
-
-int get_line_len(char *line_start){
-    int n = strlen(user_input);
-    for(char *p = line_start; p < user_input+n; p++){
-        if(*p == '\n'){
-            return p-line_start;
-        }
-    }
-    return user_input+n-line_start;
-}
-
-int get_line_num(char *line_start){
-    int line_num = 1;
-    for(char *p = user_input; p < line_start; p++){
-        if(*p == '\n'){
-            line_num++;
-        }
-    }
-    return line_num;
-}
-
 void error(char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
@@ -42,13 +11,9 @@ void error(char *fmt, ...) {
 void error_at(char *loc, char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt);
-    char *line_start = get_line_start(loc);
-    int pos = loc - line_start;
-    int line_len = get_line_len(line_start);
-    char * line = calloc(line_len+1, sizeof(char));
-    memcpy(line, line_start, line_len);
-    fprintf(stderr, "at line %d\n", get_line_num(line_start));
-    fprintf(stderr, "%s\n", line);
+
+    int pos = loc - user_input;
+    fprintf(stderr, "%s\n", user_input);
     fprintf(stderr, "%*s", pos, "");  // print pos spaces.
     fprintf(stderr, "^ ");
     vfprintf(stderr, fmt, ap);
@@ -124,12 +89,6 @@ Token *tokenize() {
             continue;
         }
 
-        if (startswith(p, "int") && !is_alnum(3)) {
-            cur = new_token(TK_INT, cur, p, 3);
-            p += 3;
-            continue;
-        }
-
         if (is_alphabet(*p)) {
             int len = 0;
             char *q = p;
@@ -140,7 +99,7 @@ Token *tokenize() {
             continue;
         }
 
-        if (strchr("+-*/()<>;={},&", *p)) {
+        if (strchr("+-*/()<>;={},", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }
