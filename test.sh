@@ -109,4 +109,26 @@ int main(){
 }
 "
 
+assert 3 "
+int main(){
+    int x;
+    int *y;
+    y = &x;
+    *y = 3;
+    return x;
+}
+"
+
+assert 12 "
+int main(){
+    int x;
+    int *y;
+    int **z;
+    y = &x;
+    z = &y;
+    **z = 12;
+    return x;
+}
+"
+
 echo OK
