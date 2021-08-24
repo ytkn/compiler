@@ -46,11 +46,22 @@ typedef enum {
     ND_FUNC,  // Function definition
 } NodeKind;
 
+typedef enum {
+    TP_INT,
+    TP_PTR,
+} TypeKind;
+
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct LVar LVar;
 typedef struct Program Program;
 typedef struct Function Function;
+typedef struct Type Type;
+
+struct Type {
+    TypeKind  ty;
+    Type *ptr_to;
+};
 
 struct Program {
     Vector *funcs;
@@ -78,6 +89,7 @@ struct Node {
     Node *rhs;
     int val;
     int offset;  // 左辺値のときのみ使う
+    Type *ty;
 
     // func name
     char *name;
@@ -103,6 +115,7 @@ struct LVar {
     char *name;
     int len;
     int offset;
+    Type *ty; // ここにも持つべきなのかなあ。。
 };
 
 void error(char *fmt, ...);

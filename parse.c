@@ -115,12 +115,20 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
-LVar *create_lvar(char *name, int len, int offset) {
+LVar *create_lvar(char *name, int len, int offset, Type *ty) {
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = name;
     lvar->len = len;
     lvar->offset = offset;
+    lvar->ty = ty;
     return lvar;
+}
+
+Type *create_type(TypeKind kind, Type *ptr_to){
+    Type *type = calloc(1, sizeof(Type));
+    type->ty = kind;
+    type->ptr_to = ptr_to;
+    return type;
 }
 
 void *program() {
@@ -141,10 +149,12 @@ Function *function() {
     expect("(");
     while (true) {
         if (consume_kind_of(TK_INT)) {
+            Type *ty = create_type(TP_INT, NULL);
+            while (consume("*")) {
+                ty = create_type(TP_PTR, ty);
+            }
             Token *param = expect_kind_of(TK_IDENT);
-            LVar *lvar = calloc(1, sizeof(LVar));
-            lvar->name = param->str;
-            lvar->len = param->len;
+            LVar *lvar = create_lvar(param->str, param->len, 0, ty);
             push_vector(params, lvar);
             if (consume(",")) continue;
         }
@@ -319,12 +329,18 @@ Node *primary() {
         expect(")");
         return node;
     }
+
     if (consume_kind_of(TK_INT)) {
+        Type *ty = create_type(TP_INT, NULL);
+        while (consume("*")) {
+            ty = create_type(TP_PTR, ty);
+        }
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
+        node->ty = ty;
         Token *tok = expect_kind_of(TK_IDENT);
         if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
-        LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8);
+        LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8, ty);
         node->offset = lvar->offset;
         push_vector(locals, lvar);
         return node;
@@ -346,6 +362,7 @@ Node *primary() {
             LVar *lvar = find_lvar(tok);
             if (!lvar) error_at(tok->str, "存在しない変数です\n");
             node->offset = lvar->offset;
+            node->ty = lvar->ty;
             return node;
         }
     }
