@@ -2,7 +2,7 @@
 
 src="
 int main(){ 
-    int *x;
+    int x[10];
     int y;
     y = 2;
     return sizeof(y);

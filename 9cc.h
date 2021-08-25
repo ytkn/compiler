@@ -50,6 +50,7 @@ typedef enum {
 typedef enum {
     TP_INT,
     TP_PTR,
+    TP_ARRAY,
 } TypeKind;
 
 typedef struct Token Token;
@@ -62,6 +63,7 @@ typedef struct Type Type;
 struct Type {
     TypeKind  ty;
     Type *ptr_to;
+    size_t array_size;
 };
 
 struct Program {

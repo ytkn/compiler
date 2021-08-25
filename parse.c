@@ -348,9 +348,15 @@ Node *primary() {
         }
         Node *node = calloc(1, sizeof(Node));
         node->kind = ND_LVAR;
-        node->ty = ty;
         Token *tok = expect_kind_of(TK_IDENT);
         if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
+        if(consume("[")){
+            int array_size = expect_number();
+            fprintf(stderr, "TODO impl array size: %d\n", array_size);
+            expect("]");
+        }
+
+        node->ty = ty;
         LVar *lvar = create_lvar(tok->str, tok->len, (locals->size + 1) * 8, ty);
         node->offset = lvar->offset;
         push_vector(locals, lvar);
