@@ -21,6 +21,7 @@ typedef enum {
     TK_FOR,
     TK_WHILE,
     TK_INT,
+    TK_SIZEOF,
 } TokenKind;
 
 typedef enum {
@@ -140,6 +141,7 @@ void gen(Node *node);
 void gen_func(Function *func);
 
 int calc_size(TypeKind ty);
+Type *create_type(TypeKind kind, Type *ptr_to);
 
 Program *prog;
 Token *token;

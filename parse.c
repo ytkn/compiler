@@ -74,6 +74,7 @@ Node *new_node_num(int val) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_NUM;
     node->val = val;
+    node->ty = create_type(TP_INT, NULL);
     return node;
 }
 
@@ -281,8 +282,10 @@ Node *add() {
     while (true) {
         if (consume("+")) {
             node = new_node(ND_ADD, node, mul());
+            node->ty = node->lhs->ty;
         } else if (consume("-")) {
             node = new_node(ND_SUB, node, mul());
+            node->ty = node->lhs->ty;
         } else {
             return node;
         }
@@ -294,8 +297,10 @@ Node *mul() {
     while (true) {
         if (consume("*")) {
             node = new_node(ND_MUL, node, unray());
+            node->ty = node->lhs->ty;
         } else if (consume("/")) {
             node = new_node(ND_DIV, node, unray());
+            node->ty = node->lhs->ty;
         } else {
             return node;
         }
@@ -303,7 +308,11 @@ Node *mul() {
 }
 
 Node *unray() {
-    if (consume("-")) {
+    if(consume_kind_of(TK_SIZEOF)){
+        Node *arg = unray();
+        if(arg->ty == NULL) parse_error("サイズが定義出来ません\n");
+        return new_node_num(calc_size(arg->ty->ty));
+    }else if (consume("-")) {
         Node *node = primary();
         node->val = -node->val;
         return node;
@@ -312,9 +321,11 @@ Node *unray() {
         return node;
     } else if (consume("*")) {
         Node *node = new_node(ND_DEREF, unray(), NULL);
+        node->ty = node->lhs->ty;
         return node;
     } else if (consume("&")) {
         Node *node = new_node(ND_ADDR, unray(), NULL);
+        node->ty = create_type(TP_PTR, NULL);
         return node;
     } else {
         Node *node = primary();

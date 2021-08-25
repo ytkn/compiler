@@ -131,4 +131,22 @@ int main(){
 }
 "
 
+assert 4 "
+int main(){ 
+    int *x;
+    int y;
+    y = 2;
+    return sizeof(y+5);
+}
+"
+
+assert 8 "
+int main(){ 
+    int **x;
+    int *y;
+    y = 2;
+    return sizeof(*x);
+}
+"
+
 echo OK

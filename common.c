@@ -3,7 +3,7 @@
 int calc_size(TypeKind ty) {
     switch (ty) {
         case TP_INT:
-            return 8;
+            return 4;
         case TP_PTR:
             return 8;
     }
