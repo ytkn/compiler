@@ -139,6 +139,8 @@ Node *primary();
 void gen(Node *node);
 void gen_func(Function *func);
 
+int calc_size(TypeKind ty);
+
 Program *prog;
 Token *token;
 char *user_input;

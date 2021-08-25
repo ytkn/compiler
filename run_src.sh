@@ -4,10 +4,10 @@ src="
 int main(){
     int x;
     int *y;
-    int **z;
-    y = &x;
-    z = &y;
-    **z = 12;
+    int z;
+    y = &z;
+    y = y+2;
+    *y = 2;
     return x;
 }
 "
