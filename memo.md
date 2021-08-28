@@ -36,21 +36,9 @@ gcc -fno-asynchronous-unwind-tables -masm=intel -S test.c
 
 ## やりたいこと
 - [ ] 関数の呼び出しの際の引数チェック
-- [ ] 改行したときのエラー表示の位置を見やすくする
 
 ```c
 int y;
 y = int z;
 ```
 みたいのが許されている
-
-```c
-int main(){ 
-    int a[15];
-    *a = 1;
-    *(a+1) = 1;
-    *(a+2) = 2;
-    return *(a+1+1);
-}
-```
-最後の行が意図通りじゃない

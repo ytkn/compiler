@@ -167,7 +167,6 @@ void gen(Node *node) {
             return;
         // TODO: 怪しいかも
         case ND_BLOCK:
-            // fprintf(stderr, "reached block\n");
             for (int i = 0; i < node->stmts->size; i++) {
                 gen((Node *)node->stmts->data[i]);
                 printf("    pop rax\n");
@@ -207,13 +206,13 @@ void gen(Node *node) {
             printf("    movzb rax, al\n");
             break;
         case ND_ADD:
-            if (node->lhs->kind == ND_LVAR && node->lhs->ty->ty == TP_PTR) {
+            if (node->lhs->ty != NULL && node->lhs->ty->ty == TP_PTR) {
                 printf("    imul rdi, %d\n", calc_size(node->lhs->ty->ptr_to->ty));
             }
             printf("    add rax, rdi\n");
             break;
         case ND_SUB:
-            if (node->lhs->kind == ND_LVAR && node->lhs->ty->ty == TP_PTR) {
+            if (node->lhs->ty != NULL && node->lhs->ty->ty == TP_PTR) {
                 printf("    imul rdi, %d\n", calc_size(node->lhs->ty->ptr_to->ty));
             }
             printf("    sub rax, rdi\n");

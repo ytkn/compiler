@@ -104,7 +104,7 @@ int main(){
     int z;
     x = 3;
     y = 5;
-    z = &y + 8;
+    z = &y + 2;
     return *z;
 }
 "
@@ -199,6 +199,26 @@ int main(){
         fac[i] = fac[i-1]*i;
     }
     return fac[4];
+}
+"
+
+assert 3 "
+int main(){ 
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 3;
+    return *(a+1+1);
+}
+"
+
+assert 1 "
+int main(){ 
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 3;
+    return *(a+1-1);
 }
 "
 

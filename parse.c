@@ -343,11 +343,11 @@ Node *unray() {
             val->ty = create_type(TP_PTR, val->ty->ptr_to);
         }
         Node *node = new_node(ND_DEREF, val, NULL);
-        node->ty = node->lhs->ty;
+        node->ty = node->lhs->ty->ptr_to;
         return node;
     } else if (consume("&")) {
         Node *node = new_node(ND_ADDR, unray(), NULL);
-        node->ty = create_type(TP_PTR, NULL);
+        node->ty = create_type(TP_PTR, node->lhs->ty);
         return node;
     } else {
         Node *node = primary();
@@ -359,7 +359,7 @@ Node *unray() {
             node = new_node(ND_ADD, node, add());
             node->ty = node->lhs->ty;
             node = new_node(ND_DEREF, node, NULL);
-            node->ty = node->lhs->ty;
+            node->ty = node->lhs->ty->ptr_to;
             expect("]");
         }
         return node;
