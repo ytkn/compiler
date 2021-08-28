@@ -104,7 +104,7 @@ int main(){
     int z;
     x = 3;
     y = 5;
-    z = &y + 8;
+    z = &y + 2;
     return *z;
 }
 "
@@ -128,6 +128,97 @@ int main(){
     z = &y;
     **z = 12;
     return x;
+}
+"
+
+assert 4 "
+int main(){ 
+    int *x;
+    int y;
+    y = 2;
+    return sizeof(y+5);
+}
+"
+
+assert 8 "
+int main(){ 
+    int **x;
+    int *y;
+    y = 2;
+    return sizeof(*x);
+}
+"
+
+assert 3 "
+int main(){
+    int a[2];
+    *a = 1;
+    *(a + 1) = 2;
+    int *p;
+    p = a;
+    return *p + *(p + 1);
+}
+"
+
+assert 89 "
+int calc_fib(int n){
+    int fib[15];
+    *fib = 1;
+    *(fib+1) = 1;
+    int i;
+    for(i = 2; i < 15; i = i+1){
+        *(fib+i) = *(fib+(i-1)) + *(fib+(i-2));
+    }
+    return *(fib+(n-1));
+}
+
+int main(){
+    return calc_fib(11);
+}
+"
+
+assert 233 "
+int main(){ 
+    int fib[15];
+    fib[0] = 1;
+    fib[1] = 1;
+    int i;
+    for(i = 2; i < 13; i = i+1){
+        fib[i] = fib[i-1]+fib[i-2];
+    }
+    return fib[12];
+}
+"
+
+assert 24 "
+int main(){ 
+    int fac[5];
+    fac[0] = 1;
+    int i;
+    for(i = 1; i <= 4; i = i+1){
+        fac[i] = fac[i-1]*i;
+    }
+    return fac[4];
+}
+"
+
+assert 3 "
+int main(){ 
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 3;
+    return *(a+1+1);
+}
+"
+
+assert 1 "
+int main(){ 
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 3;
+    return *(a+1-1);
 }
 "
 

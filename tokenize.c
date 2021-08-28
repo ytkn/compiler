@@ -130,6 +130,12 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "sizeof") && !is_alnum(6)) {
+            cur = new_token(TK_SIZEOF, cur, p, 6);
+            p += 6;
+            continue;
+        }
+
         if (is_alphabet(*p)) {
             int len = 0;
             char *q = p;
@@ -140,7 +146,7 @@ Token *tokenize() {
             continue;
         }
 
-        if (strchr("+-*/()<>;={},&", *p)) {
+        if (strchr("+-*/()<>;={},&[]", *p)) {
             cur = new_token(TK_RESERVED, cur, p++, 1);
             continue;
         }

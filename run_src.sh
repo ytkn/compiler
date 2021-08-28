@@ -1,14 +1,12 @@
 #!/bin/bash
 
 src="
-int main(){
-    int x;
-    int *y;
-    int **z;
-    y = &x;
-    z = &y;
-    **z = 12;
-    return x;
+int main(){ 
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 3;
+    return *(a+1+1);
 }
 "
 

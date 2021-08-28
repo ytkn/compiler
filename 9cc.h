@@ -21,6 +21,7 @@ typedef enum {
     TK_FOR,
     TK_WHILE,
     TK_INT,
+    TK_SIZEOF,
 } TokenKind;
 
 typedef enum {
@@ -49,6 +50,7 @@ typedef enum {
 typedef enum {
     TP_INT,
     TP_PTR,
+    TP_ARRAY,
 } TypeKind;
 
 typedef struct Token Token;
@@ -61,6 +63,7 @@ typedef struct Type Type;
 struct Type {
     TypeKind  ty;
     Type *ptr_to;
+    size_t array_size;
 };
 
 struct Program {
@@ -138,6 +141,11 @@ Node *primary();
 
 void gen(Node *node);
 void gen_func(Function *func);
+
+int calc_size(TypeKind ty);
+Type *create_type(TypeKind kind, Type *ptr_to);
+
+int sum_offset(Vector *locals);
 
 Program *prog;
 Token *token;
