@@ -351,11 +351,11 @@ Node *unray() {
         return node;
     } else {
         Node *node = primary();
-        if(consume("[")){ // ここでいいのかなあ
+        if (consume("[")) {  // ここでいいのかなあ
             if (node->kind == ND_LVAR && node->ty->ty == TP_ARRAY) {
                 node->ty = create_type(TP_PTR, node->ty->ptr_to);
             }
-            if(node->ty->ty != TP_PTR) parse_error("ポインタではありません\n");
+            if (node->ty->ty != TP_PTR) parse_error("ポインタではありません\n");
             node = new_node(ND_ADD, node, add());
             node->ty = node->lhs->ty;
             node = new_node(ND_DEREF, node, NULL);

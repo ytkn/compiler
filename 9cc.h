@@ -61,7 +61,7 @@ typedef struct Function Function;
 typedef struct Type Type;
 
 struct Type {
-    TypeKind  ty;
+    TypeKind ty;
     Type *ptr_to;
     size_t array_size;
 };
@@ -118,7 +118,7 @@ struct LVar {
     char *name;
     int len;
     int offset;
-    Type *ty; // ここにも持つべきなのかなあ。。
+    Type *ty;  // ここにも持つべきなのかなあ。。
 };
 
 void error(char *fmt, ...);

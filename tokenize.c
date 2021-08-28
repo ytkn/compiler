@@ -1,30 +1,30 @@
 #include "9cc.h"
 
-char *get_line_start(char *loc){
+char *get_line_start(char *loc) {
     int n = strlen(user_input);
     char *ret = user_input;
-    for(char *p = user_input; p < loc; p++){
-        if(*p == '\n'){
-            ret = p+1;
+    for (char *p = user_input; p < loc; p++) {
+        if (*p == '\n') {
+            ret = p + 1;
         }
     }
     return ret;
 }
 
-int get_line_len(char *line_start){
+int get_line_len(char *line_start) {
     int n = strlen(user_input);
-    for(char *p = line_start; p < user_input+n; p++){
-        if(*p == '\n'){
-            return p-line_start;
+    for (char *p = line_start; p < user_input + n; p++) {
+        if (*p == '\n') {
+            return p - line_start;
         }
     }
-    return user_input+n-line_start;
+    return user_input + n - line_start;
 }
 
-int get_line_num(char *line_start){
+int get_line_num(char *line_start) {
     int line_num = 1;
-    for(char *p = user_input; p < line_start; p++){
-        if(*p == '\n'){
+    for (char *p = user_input; p < line_start; p++) {
+        if (*p == '\n') {
             line_num++;
         }
     }
@@ -45,7 +45,7 @@ void error_at(char *loc, char *fmt, ...) {
     char *line_start = get_line_start(loc);
     int pos = loc - line_start;
     int line_len = get_line_len(line_start);
-    char * line = calloc(line_len+1, sizeof(char));
+    char *line = calloc(line_len + 1, sizeof(char));
     memcpy(line, line_start, line_len);
     fprintf(stderr, "at line %d\n", get_line_num(line_start));
     fprintf(stderr, "%s\n", line);
