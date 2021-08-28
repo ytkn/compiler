@@ -177,4 +177,29 @@ int main(){
 }
 "
 
+assert 233 "
+int main(){ 
+    int fib[15];
+    fib[0] = 1;
+    fib[1] = 1;
+    int i;
+    for(i = 2; i < 13; i = i+1){
+        fib[i] = fib[i-1]+fib[i-2];
+    }
+    return fib[12];
+}
+"
+
+assert 24 "
+int main(){ 
+    int fac[5];
+    fac[0] = 1;
+    int i;
+    for(i = 1; i <= 4; i = i+1){
+        fac[i] = fac[i-1]*i;
+    }
+    return fac[4];
+}
+"
+
 echo OK
