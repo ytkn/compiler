@@ -20,6 +20,8 @@ typedef enum {
     TK_ELSE,
     TK_FOR,
     TK_WHILE,
+    TK_INT,
+    TK_SIZEOF,
 } TokenKind;
 
 typedef enum {
@@ -28,6 +30,8 @@ typedef enum {
     ND_MUL,
     ND_DIV,
     ND_NUM,
+    ND_ADDR,
+    ND_DEREF,
     ND_EQ,  // ==
     ND_NE,  // !=
     ND_LT,  // <
@@ -43,11 +47,24 @@ typedef enum {
     ND_FUNC,  // Function definition
 } NodeKind;
 
+typedef enum {
+    TP_INT,
+    TP_PTR,
+    TP_ARRAY,
+} TypeKind;
+
 typedef struct Token Token;
 typedef struct Node Node;
 typedef struct LVar LVar;
 typedef struct Program Program;
 typedef struct Function Function;
+typedef struct Type Type;
+
+struct Type {
+    TypeKind  ty;
+    Type *ptr_to;
+    size_t array_size;
+};
 
 struct Program {
     Vector *funcs;
@@ -75,6 +92,7 @@ struct Node {
     Node *rhs;
     int val;
     int offset;  // 左辺値のときのみ使う
+    Type *ty;
 
     // func name
     char *name;
@@ -100,6 +118,7 @@ struct LVar {
     char *name;
     int len;
     int offset;
+    Type *ty; // ここにも持つべきなのかなあ。。
 };
 
 void error(char *fmt, ...);
@@ -122,6 +141,11 @@ Node *primary();
 
 void gen(Node *node);
 void gen_func(Function *func);
+
+int calc_size(TypeKind ty);
+Type *create_type(TypeKind kind, Type *ptr_to);
+
+int sum_offset(Vector *locals);
 
 Program *prog;
 Token *token;

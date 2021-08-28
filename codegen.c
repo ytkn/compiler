@@ -1,6 +1,54 @@
 #include "9cc.h"
 
+Function *cur_func;
+
+bool is_array(Node *node) {
+    for (int i = 0; i < cur_func->locals->size; i++) {
+        LVar *var = cur_func->locals->data[i];
+        if (var->len == node->name_len && !memcmp(node->name, var->name, var->len)) return var->ty->ty == TP_ARRAY;
+    }
+    for (int i = 0; i < cur_func->params->size; i++) {
+        LVar *var = cur_func->params->data[i];
+        if (var->len == node->name_len && !memcmp(node->name, var->name, var->len)) return var->ty->ty == TP_ARRAY;
+    }
+    return false;
+    // error("値がみつかりませんでした%s\n", node->name);
+}
+
+void gen_lval_deref(Node *node, bool is_root) {
+    if (node->kind == ND_DEREF) {
+        gen_lval_deref(node->lhs, false);
+        if (!is_root) {  // 値として入っているアドレスを吐かせる
+            printf("    pop rax\n");
+            printf("    mov rax, [rax]\n");
+            printf("    push rax\n");
+        }
+    } else {
+        if (node->ty->ty != TP_PTR) error("ポインタではありません\n");
+        if (node->kind != ND_LVAR) {
+            gen(node);
+            return;
+        }
+        // 値として入っているアドレスを吐かせる
+        printf("    mov rax, rbp\n");
+        if (node->offset >= 0)
+            printf("    sub rax, %d\n", node->offset);
+        else
+            printf("    add rax, %d\n", -node->offset);
+        if(is_array(node)) { // ここをなおすのかなあ。。
+            printf("    push rax\n");
+            return;
+        }
+        printf("    mov rax, [rax]\n");
+        printf("    push rax\n");
+    }
+}
+
 void gen_lval(Node *node) {
+    if (node->kind == ND_DEREF) {
+        gen_lval_deref(node, true);
+        return;
+    }
     if (node->kind != ND_LVAR) error("代入の左辺値が変数ではありません");
     printf("    mov rax, rbp\n");
     if (node->offset >= 0) {
@@ -12,25 +60,23 @@ void gen_lval(Node *node) {
 }
 
 void gen_func(Function *func) {
+    cur_func = func;
     char *func_name = calloc(func->name_len + 1, sizeof(char));
     memcpy(func_name, func->name, func->name_len);
-    // fprintf(stderr, "gen func: %s\n", func_name);
-    // fprintf(stderr, "locals: %d\n", func->locals->size);
-    // fprintf(stderr, "params: %d\n", func->params->size);
     printf(".globl %s\n", func_name);
     printf("%s:\n", func_name);
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
-    printf("    sub rsp, %d\n", func->locals->size * 8);
+    printf("    sub rsp, %d\n", sum_offset(func->locals));
     for (int i = 0; i < func->node->stmts->size; i++) {
         gen(func->node->stmts->data[i]);
     }
+    // return節でrbpがもとに戻るのでここでは書かなくていい
 }
 
 void gen_func_call(Node *node) {
     char *func_name = calloc(node->name_len + 1, sizeof(char));
     memcpy(func_name, node->name, node->name_len);
-    // fprintf(stderr, "gen call:%s\n", func_name);
     for (int i = 0; i < node->args->size; i++) {
         Node *arg = (Node *)node->args->data[i];
         gen(arg);
@@ -48,6 +94,16 @@ void gen(Node *node) {
             return;
         case ND_LVAR:
             gen_lval(node);
+            if(is_array(node)) return;
+            printf("    pop rax\n");
+            printf("    mov rax, [rax]\n");
+            printf("    push rax\n");
+            return;
+        case ND_ADDR:
+            gen_lval(node->lhs);
+            return;
+        case ND_DEREF:
+            gen(node->lhs);
             printf("    pop rax\n");
             printf("    mov rax, [rax]\n");
             printf("    push rax\n");
@@ -111,7 +167,6 @@ void gen(Node *node) {
             return;
         // TODO: 怪しいかも
         case ND_BLOCK:
-            // fprintf(stderr, "reached block\n");
             for (int i = 0; i < node->stmts->size; i++) {
                 gen((Node *)node->stmts->data[i]);
                 printf("    pop rax\n");
@@ -151,9 +206,15 @@ void gen(Node *node) {
             printf("    movzb rax, al\n");
             break;
         case ND_ADD:
+            if (node->lhs->ty != NULL && node->lhs->ty->ty == TP_PTR) {
+                printf("    imul rdi, %d\n", calc_size(node->lhs->ty->ptr_to->ty));
+            }
             printf("    add rax, rdi\n");
             break;
         case ND_SUB:
+            if (node->lhs->ty != NULL && node->lhs->ty->ty == TP_PTR) {
+                printf("    imul rdi, %d\n", calc_size(node->lhs->ty->ptr_to->ty));
+            }
             printf("    sub rax, rdi\n");
             break;
         case ND_MUL:
