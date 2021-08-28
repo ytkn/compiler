@@ -149,4 +149,32 @@ int main(){
 }
 "
 
+assert 3 "
+int main(){
+    int a[2];
+    *a = 1;
+    *(a + 1) = 2;
+    int *p;
+    p = a;
+    return *p + *(p + 1);
+}
+"
+
+assert 89 "
+int calc_fib(int n){
+    int fib[15];
+    *fib = 1;
+    *(fib+1) = 1;
+    int i;
+    for(i = 2; i < 15; i = i+1){
+        *(fib+i) = *(fib+(i-1)) + *(fib+(i-2));
+    }
+    return *(fib+(n-1));
+}
+
+int main(){
+    return calc_fib(11);
+}
+"
+
 echo OK

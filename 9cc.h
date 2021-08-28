@@ -145,6 +145,8 @@ void gen_func(Function *func);
 int calc_size(TypeKind ty);
 Type *create_type(TypeKind kind, Type *ptr_to);
 
+int sum_offset(Vector *locals);
+
 Program *prog;
 Token *token;
 char *user_input;

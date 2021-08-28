@@ -2,10 +2,11 @@
 
 src="
 int main(){ 
-    int x[10];
-    int y;
-    y = 2;
-    return sizeof(y);
+    int a[15];
+    *a = 1;
+    *(a+1) = 1;
+    *(a+2) = 2;
+    return *(a+1+1);
 }
 "
 

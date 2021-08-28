@@ -8,3 +8,16 @@ int calc_size(TypeKind ty) {
             return 8;
     }
 }
+
+int sum_offset(Vector *locals) {
+    int sum = 0;
+    for (int i = 0; i < locals->size; i++) {
+        LVar *lvar = locals->data[i];
+        if (lvar->ty->ty == TP_ARRAY) {
+            sum += lvar->ty->array_size * calc_size(lvar->ty->ptr_to->ty);
+        } else {
+            sum += 8;
+        }
+    }
+    return sum;
+}
