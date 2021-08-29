@@ -68,6 +68,7 @@ struct Type {
 
 struct Program {
     Vector *funcs;
+    Vector *globals;
 };
 
 struct Function {
@@ -94,6 +95,8 @@ struct Node {
     int offset;  // 左辺値のときのみ使う
     Type *ty;
 
+    bool is_global;
+
     // func name
     char *name;
     int name_len;
@@ -117,7 +120,7 @@ struct Node {
 struct LVar {
     char *name;
     int len;
-    int offset;
+    int offset; // local変数のときのみ
     Type *ty;  // ここにも持つべきなのかなあ。。
 };
 
@@ -128,6 +131,7 @@ Token *tokenize();
 
 // parser
 void *program();
+void top_level();
 Function *function();
 Node *stmt();
 Node *expr();
@@ -141,6 +145,7 @@ Node *primary();
 
 void gen(Node *node);
 void gen_func(Function *func);
+void gen_global_def(LVar *global);
 
 int calc_size(TypeKind ty);
 Type *create_type(TypeKind kind, Type *ptr_to);

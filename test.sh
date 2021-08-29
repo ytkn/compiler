@@ -222,4 +222,22 @@ int main(){
 }
 "
 
+assert 30 "
+int a;
+
+int change_a(int x){
+    a = x;
+    return 1;
+}
+
+int main(){ 
+    int b;
+    int c;
+    b = 20;
+    c = 10;
+    change_a(b+c);
+    return a;
+}
+"
+
 echo OK

@@ -106,6 +106,17 @@ Node *new_node_lvar(LVar *lvar) {
     node->name_len = lvar->len;
     node->ty = lvar->ty;
     node->offset = lvar->offset;
+    node->is_global = false;
+    return node;
+}
+
+Node *new_node_global(LVar *lvar) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->name = lvar->name;
+    node->name_len = lvar->len;
+    node->ty = lvar->ty;
+    node->is_global = true;
     return node;
 }
 
@@ -117,6 +128,14 @@ Function *new_func(char *name, int len, Node *node) {
     fn->name_len = len;
     fn->node = node;
     return fn;
+}
+
+LVar *find_global(Token *tok) {
+    for (int i = 0; i < prog->globals->size; i++) {
+        LVar *var = prog->globals->data[i];
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+    }
+    return NULL;
 }
 
 LVar *find_lvar(Token *tok) {
@@ -150,19 +169,39 @@ Type *create_type(TypeKind kind, Type *ptr_to) {
 void *program() {
     prog = calloc(1, sizeof(Program));
     prog->funcs = create_vector();
+    prog->globals = create_vector();
     while (!at_eof()) {
-        push_vector(prog->funcs, function());
+        top_level();
     }
 }
 
-Function *function() {
+void top_level() {
     expect_kind_of(TK_INT);
     Token *tok = consume_ident();
+    if (consume("(")) {
+        push_vector(prog->funcs, function(tok));
+        return;
+    }
+    Type *ty = create_type(TP_INT, NULL);
+    while (consume("*")) {
+        ty = create_type(TP_PTR, ty);
+    }
+    if (consume("[")) {
+        int num = expect_number();
+        expect("]");
+        parse_error("array in global scope is not implemented\n");
+    } else {
+        LVar *lvar = create_lvar(tok->str, tok->len, 0, ty);
+        push_vector(prog->globals, lvar);
+    }
+    expect(";");
+}
+
+Function *function(Token *tok) {
     Node *node = new_node_func_def();
     Function *fn = new_func(tok->str, tok->len, node);
     locals = fn->locals;
     params = fn->params;
-    expect("(");
     while (true) {
         if (consume_kind_of(TK_INT)) {
             Type *ty = create_type(TP_INT, NULL);
@@ -381,7 +420,7 @@ Node *primary() {
         }
 
         Token *tok = expect_kind_of(TK_IDENT);
-        if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
+        if (find_global(tok) || find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
         if (consume("[")) {
             int array_size = expect_number() * calc_size(ty->ty);
             ty = create_type(TP_ARRAY, ty);
@@ -404,7 +443,11 @@ Node *primary() {
             }
             return node;
         } else {  // 左辺値
-            LVar *lvar = find_lvar(tok);
+            LVar *lvar = find_global(tok);
+            if (lvar) {
+                return new_node_global(lvar);
+            }
+            lvar = find_lvar(tok);
             if (!lvar) error_at(tok->str, "存在しない変数です\n");
             return new_node_lvar(lvar);
         }

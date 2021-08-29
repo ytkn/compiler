@@ -44,12 +44,29 @@ void gen_lval_deref(Node *node, bool is_root) {
     }
 }
 
+void gen_global_def(LVar *global) {
+    char *name = calloc(global->len + 1, sizeof(char));
+    memcpy(name, global->name, global->len);
+    printf("    .comm	%s, %d\n", name, calc_size(global->ty->ty));
+}
+
+void gen_global(Node *node) {
+    char *name = calloc(node->name_len + 1, sizeof(char));
+    memcpy(name, node->name, node->name_len);
+    printf("    lea rax, %s[rip]\n", name);
+    printf("    push rax\n");
+}
+
 void gen_lval(Node *node) {
     if (node->kind == ND_DEREF) {
         gen_lval_deref(node, true);
         return;
     }
     if (node->kind != ND_LVAR) error("代入の左辺値が変数ではありません");
+    if (node->is_global) {
+        gen_global(node);
+        return;
+    }
     printf("    mov rax, rbp\n");
     if (node->offset >= 0) {
         printf("    sub rax, %d\n", node->offset);

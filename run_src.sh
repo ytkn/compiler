@@ -1,12 +1,13 @@
 #!/bin/bash
 
 src="
+int a;
+int b;
+
 int main(){ 
-    int a[15];
-    *a = 1;
-    *(a+1) = 1;
-    *(a+2) = 3;
-    return *(a+1+1);
+    a = 20;
+    b = 10;
+    return a+b;
 }
 "
 

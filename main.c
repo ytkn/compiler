@@ -35,6 +35,9 @@ int main(int argc, char** argv) {
     token = tokenize();
     program();
     printf(".intel_syntax noprefix\n");
+    for (int i = 0; i < prog->globals->size; i++) {
+        gen_global_def(prog->globals->data[i]);
+    }
     for (int i = 0; i < prog->funcs->size; i++) {
         gen_func(prog->funcs->data[i]);
     }
