@@ -162,7 +162,7 @@ void gen(Node *node) {
             printf("    je .Lend%d\n", control_idx);
             gen(node->body);
             printf("    jmp .Lbegin%d\n", control_idx);
-            printf(".Lend%d:", control_idx);
+            printf(".Lend%d:\n", control_idx);
             control_idx++;
             return;
         // TODO: 怪しいかも
