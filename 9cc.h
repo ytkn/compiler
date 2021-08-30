@@ -21,6 +21,7 @@ typedef enum {
     TK_FOR,
     TK_WHILE,
     TK_INT,
+    TK_CHAR,
     TK_SIZEOF,
 } TokenKind;
 
@@ -48,6 +49,7 @@ typedef enum {
 } NodeKind;
 
 typedef enum {
+    TP_CHAR,
     TP_INT,
     TP_PTR,
     TP_ARRAY,

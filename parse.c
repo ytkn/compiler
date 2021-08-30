@@ -39,6 +39,18 @@ Token *consume_ident() {
     return tok;
 }
 
+Type *consume_type() {
+    TypeKind kind;
+    if(consume_kind_of(TK_INT)) kind = TP_INT;
+    else if(consume_kind_of(TK_CHAR)) kind = TP_CHAR;
+    else return NULL;
+    Type *ty = create_type(kind, NULL);
+    while (consume("*")) {
+        ty = create_type(TP_PTR, ty);
+    }
+    return ty;
+}
+
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
         error_at(token->str, "'%s'ではありません", op);
@@ -203,11 +215,8 @@ Function *function(Token *tok) {
     locals = fn->locals;
     params = fn->params;
     while (true) {
-        if (consume_kind_of(TK_INT)) {
-            Type *ty = create_type(TP_INT, NULL);
-            while (consume("*")) {
-                ty = create_type(TP_PTR, ty);
-            }
+        Type *ty = consume_type();
+        if (ty) {
             Token *param = expect_kind_of(TK_IDENT);
             LVar *lvar = create_lvar(param->str, param->len, 0, ty);
             push_vector(params, lvar);
@@ -413,12 +422,8 @@ Node *primary() {
         return node;
     }
 
-    if (consume_kind_of(TK_INT)) {
-        Type *ty = create_type(TP_INT, NULL);
-        while (consume("*")) {
-            ty = create_type(TP_PTR, ty);
-        }
-
+    Type *ty = consume_type();
+    if (ty) {
         Token *tok = expect_kind_of(TK_IDENT);
         if (find_global(tok) || find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
         if (consume("[")) {
