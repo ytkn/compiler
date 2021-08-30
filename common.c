@@ -2,6 +2,8 @@
 
 int calc_size(TypeKind ty) {
     switch (ty) {
+        case TP_CHAR:
+            return 1;
         case TP_INT:
             return 4;
         case TP_PTR:

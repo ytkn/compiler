@@ -41,9 +41,13 @@ Token *consume_ident() {
 
 Type *consume_type() {
     TypeKind kind;
-    if(consume_kind_of(TK_INT)) kind = TP_INT;
-    else if(consume_kind_of(TK_CHAR)) kind = TP_CHAR;
-    else return NULL;
+    if (consume_kind_of(TK_INT)) {
+        kind = TP_INT;
+    } else if (consume_kind_of(TK_CHAR)) {
+        kind = TP_CHAR;
+    } else {
+        return NULL;
+    }
     Type *ty = create_type(kind, NULL);
     while (consume("*")) {
         ty = create_type(TP_PTR, ty);
@@ -188,16 +192,14 @@ void *program() {
 }
 
 void top_level() {
-    expect_kind_of(TK_INT);
+    Type *ty = consume_type();
+    if (!ty) parse_error("型ではありません\n");
     Token *tok = consume_ident();
     if (consume("(")) {
         push_vector(prog->funcs, function(tok));
         return;
     }
-    Type *ty = create_type(TP_INT, NULL);
-    while (consume("*")) {
-        ty = create_type(TP_PTR, ty);
-    }
+
     if (consume("[")) {
         int num = expect_number();
         expect("]");
