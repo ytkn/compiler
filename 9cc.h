@@ -49,6 +49,7 @@ typedef enum {
 } NodeKind;
 
 typedef enum {
+    TP_BOOL,
     TP_CHAR,
     TP_INT,
     TP_PTR,
@@ -79,6 +80,7 @@ struct Function {
     int name_len;
     Node *node;
     Vector *params;
+    Type *ty; // 戻り値の型
 };
 
 struct Token {

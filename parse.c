@@ -166,6 +166,14 @@ LVar *find_lvar(Token *tok) {
     return NULL;
 }
 
+Function *find_function(Token *tok) {
+    for (int i = 0; i < prog->funcs->size; i++) {
+        Function *func = prog->funcs->data[i];
+        if (func->name_len == tok->len && !memcmp(tok->str, func->name, func->name_len)) return func;
+    }
+    return NULL;
+}
+
 LVar *create_lvar(char *name, int len, int offset, Type *ty) {
     LVar *lvar = calloc(1, sizeof(LVar));
     lvar->name = name;
@@ -196,7 +204,8 @@ void top_level() {
     if (!ty) parse_error("型ではありません\n");
     Token *tok = consume_ident();
     if (consume("(")) {
-        push_vector(prog->funcs, function(tok));
+        // NOTE: 再帰関数呼び出しに対応するためにfunctionの中でprog->funcsに入れている。
+        function(tok);
         return;
     }
 
@@ -225,8 +234,10 @@ Function *function(Token *tok) {
             if (consume(",")) continue;
         }
         expect(")");
+        fn->ty = ty;
         break;
     }
+    push_vector(prog->funcs, fn);
     // offsetの調整
     for (int i = 0; i < params->size; i++) {
         LVar *var = params->data[i];
@@ -317,8 +328,10 @@ Node *equality() {
     while (true) {
         if (consume("==")) {
             node = new_node(ND_EQ, node, relational());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume("!=")) {
             node = new_node(ND_NE, node, relational());
+            node->ty = create_type(TP_BOOL, NULL);
         } else {
             return node;
         }
@@ -330,12 +343,16 @@ Node *relational() {
     while (true) {
         if (consume("<")) {
             node = new_node(ND_LT, node, add());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume("<=")) {
             node = new_node(ND_LE, node, add());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume(">")) {
             node = new_node(ND_LT, add(), node);
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume(">=")) {
             node = new_node(ND_LE, add(), node);
+            node->ty = create_type(TP_BOOL, NULL);
         } else {
             return node;
         }
@@ -441,7 +458,12 @@ Node *primary() {
     Token *tok = consume_ident();
     if (tok) {
         if (consume("(")) {  // 関数呼び出し
+            Function *func = find_function(tok);
+            if (!func) {
+                error_at(tok->str, "定義されていない関数です\n");
+            }
             Node *node = new_node_func_call(tok->str, tok->len);
+            node->ty = func->ty;
             while (true) {
                 if (consume(")")) break;
                 push_vector(node->args, equality());
