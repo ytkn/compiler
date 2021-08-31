@@ -101,7 +101,7 @@ assert 3 "
 int main(){
     int x;
     int y;
-    int z;
+    int *z;
     x = 3;
     y = 5;
     z = &y + 2;
@@ -237,6 +237,26 @@ int main(){
     c = 10;
     change_a(b+c);
     return a;
+}
+"
+
+assert 3 "
+int main(){ 
+    char x[3];
+    x[0] = -1;
+    x[1] = 2;
+    int y;
+    y = 4;
+    return x[0] + y;
+}
+"
+assert 11 "
+int main(){ 
+    char a;
+    char b;
+    a = 1;
+    b = 10;
+    return b+a;
 }
 "
 

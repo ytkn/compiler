@@ -155,11 +155,12 @@ int calc_size(TypeKind ty);
 Type *create_type(TypeKind kind, Type *ptr_to);
 
 int sum_offset(Vector *locals);
+int max(int a, int b);
 
 Program *prog;
 Token *token;
 char *user_input;
-int n_controls;  // 制御構文の番号
+int n_controls;  // 制御構文の番号(全体でユニークになる必要がある)
 
 // parse中の関数に関するもの
 Vector *params;

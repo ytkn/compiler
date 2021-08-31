@@ -367,7 +367,7 @@ Node *add() {
                 node->ty = create_type(TP_PTR, node->ty->ptr_to);
             }
             node = new_node(ND_ADD, node, mul());
-            node->ty = node->lhs->ty;
+            node->ty = node->lhs->ty; // TODO: ここの型はlhsで決め打つのはだめかもしれない。
         } else if (consume("-")) {
             node = new_node(ND_SUB, node, mul());
             node->ty = node->lhs->ty;

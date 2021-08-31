@@ -1,15 +1,17 @@
 #!/bin/bash
 
 src="
-int a;
-int b;
-
 int main(){ 
-    a = 20;
+    char a;
+    char b;
+    a = 1;
     b = 10;
-    return a+b;
+    return b+a;
 }
 "
+
+
+# (aa+12)/3+20;
 
 make
 ./9cc "$src" > tmp.s

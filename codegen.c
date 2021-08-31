@@ -35,7 +35,7 @@ void gen_lval_deref(Node *node, bool is_root) {
             printf("    sub rax, %d\n", node->offset);
         else
             printf("    add rax, %d\n", -node->offset);
-        if (is_array(node)) {  // ここをなおすのかなあ。。
+        if (is_array(node)) {
             printf("    push rax\n");
             return;
         }
@@ -104,6 +104,7 @@ void gen_func_call(Node *node) {
 }
 
 void gen(Node *node) {
+    int size = -1;
     int control_idx = -1;
     switch (node->kind) {
         case ND_NUM:
@@ -111,9 +112,16 @@ void gen(Node *node) {
             return;
         case ND_LVAR:
             gen_lval(node);
+            size = calc_size(node->ty->ty);
             if (is_array(node)) return;
             printf("    pop rax\n");
-            printf("    mov rax, [rax]\n");
+            if(size == 8) printf("    mov rax, [rax]\n");
+            else if(size == 4) printf("    mov eax, [rax]\n");
+            else if(size == 1) printf("    movzx eax, BYTE PTR [rax]\n");
+            else {
+                fprintf(stderr, "対応していないサイズ: %d\n", size);
+                exit(1);
+            }
             printf("    push rax\n");
             return;
         case ND_ADDR:
@@ -121,16 +129,30 @@ void gen(Node *node) {
             return;
         case ND_DEREF:
             gen(node->lhs);
+            size = calc_size(node->lhs->ty->ptr_to->ty);
             printf("    pop rax\n");
-            printf("    mov rax, [rax]\n");
+            if(size == 8) printf("    mov rax, [rax]\n");
+            else if(size == 4) printf("    mov eax, [rax]\n");
+            else if(size == 1) printf("    movzx eax, BYTE PTR [rax]\n");
+            else {
+                fprintf(stderr, "対応していないサイズ: %d\n", size);
+                exit(1);
+            }
             printf("    push rax\n");
             return;
         case ND_ASSIGN:
+            size = calc_size(node->lhs->ty->ty);
             gen_lval(node->lhs);
             gen(node->rhs);
             printf("    pop rdi\n");
             printf("    pop rax\n");
-            printf("    mov [rax], rdi\n");
+            if(size == 8) printf("    mov [rax], rdi\n");
+            else if(size == 4) printf("    mov [rax], edi\n");
+            else if(size == 1) printf("    mov [rax], dil\n");
+            else {
+                fprintf(stderr, "対応していないサイズ: %d\n", size);
+                exit(1);
+            }
             printf("    push rdi\n");
             return;
         case ND_RETURN:
