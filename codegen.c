@@ -3,6 +3,10 @@
 Function *cur_func;
 
 bool is_array(Node *node) {
+    for (int i = 0; i < prog->globals->size; i++) {
+        LVar *var = prog->globals->data[i];
+        if (var->len == node->name_len && !memcmp(node->name, var->name, var->len)) return var->ty->ty == TP_ARRAY;
+    }
     for (int i = 0; i < cur_func->locals->size; i++) {
         LVar *var = cur_func->locals->data[i];
         if (var->len == node->name_len && !memcmp(node->name, var->name, var->len)) return var->ty->ty == TP_ARRAY;
@@ -47,7 +51,11 @@ void gen_lval_deref(Node *node, bool is_root) {
 void gen_global_def(LVar *global) {
     char *name = calloc(global->len + 1, sizeof(char));
     memcpy(name, global->name, global->len);
-    printf("    .comm	%s, %d\n", name, calc_size(global->ty->ty));
+    if(global->ty->ty == TP_ARRAY){
+        printf("    .comm	%s, %ld\n", name, calc_size(global->ty->ptr_to->ty)*global->ty->array_size);
+    }else{
+        printf("    .comm	%s, %d\n", name, calc_size(global->ty->ty));
+    }
 }
 
 void gen_global(Node *node) {
