@@ -289,5 +289,16 @@ int main(){ // main
     return a;
 }
 "
+assert 1 "
+/* ブロックコメントのテスト */
+int main(){ 
+    int a;
+    a = 1;
+    /*
+    a = 10;
+    */
+    return a;
+}
+"
 
 echo OK

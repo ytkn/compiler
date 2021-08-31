@@ -94,6 +94,17 @@ Token *tokenize() {
             continue;
         }
 
+        if (startswith(p, "/*")) {
+            p += 2;
+            char *q = p;
+            while(!startswith(q, "*/")){
+                if(!(*q)) error_at(p, "コメントが閉じられていません");
+                q++;
+            }
+            p = q + 2;
+            continue;
+        }
+
         if (startswith(p, "==") || startswith(p, "!=") || startswith(p, "<=") || startswith(p, ">=")) {
             cur = new_token(TK_RESERVED, cur, p, 2);
             p += 2;
