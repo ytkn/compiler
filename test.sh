@@ -282,4 +282,23 @@ int main(){
 }
 "
 
+assert 10 "
+// コメントのテスト
+int main(){ // main
+    int a = 10; // assign
+    return a;
+}
+"
+assert 1 "
+/* ブロックコメントのテスト */
+int main(){ 
+    int a;
+    a = 1;
+    /*
+    a = 10;
+    */
+    return a;
+}
+"
+
 echo OK
