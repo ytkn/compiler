@@ -1,37 +1,45 @@
+#include <errno.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "9cc.h"
 
-// FOR DEBUG
-char* node_kind_to_char(NodeKind kind) {
-    if (kind == ND_ADD) return "+";
-    if (kind == ND_SUB) return "-";
-    if (kind == ND_MUL) return "*";
-    if (kind == ND_DIV) return "/";
-    if (kind == ND_EQ) return "==";
-    if (kind == ND_NE) return "!=";
-    if (kind == ND_LT) return "<";
-    if (kind == ND_LE) return "<=";
+bool ends_with(const char *str, const char *suffix) {
+    size_t len1 = strlen(str);
+    size_t len2 = strlen(suffix);
+    return len1 >= len2 && strcmp(str + len1 - len2, suffix) == 0;
 }
 
-void print_node(Node* node) {
-    if (node->kind == ND_NUM) {
-        printf("%d", node->val);
-        return;
+char *read_file(char *path) {
+    FILE *fp = fopen(path, "r");
+    if (!fp) {
+        error("cannot open %s: %s", path, strerror(errno));
     }
-    printf("(");
-    print_node(node->lhs);
-    printf("%s", node_kind_to_char(node->kind));
-    print_node(node->rhs);
-    printf(")");
+    if (fseek(fp, 0, SEEK_END) == -1) error("%s: fseek: %s", path, strerror(errno));
+    size_t size = ftell(fp);
+    if (fseek(fp, 0, SEEK_SET) == -1) error("%s: fseek: %s", path, strerror(errno));
+
+    char *buf = calloc(1, size + 2);
+    fread(buf, size, 1, fp);
+
+    // ファイルが必ず"\n\0"で終わっているようにする
+    if (size == 0 || buf[size - 1] != '\n') buf[size++] = '\n';
+    buf[size] = '\0';
+    fclose(fp);
+    return buf;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "引数の個数が正しくありません\n");
         return 1;
     }
-    user_input = argv[1];
+    if (ends_with(argv[1], ".c")) {
+        fprintf(stderr, "read file: %s\n", argv[1]);
+        user_input = read_file(argv[1]);
+    } else {
+        user_input = argv[1];
+    }
     token = tokenize();
     program();
     printf(".intel_syntax noprefix\n");
