@@ -18,6 +18,7 @@ int main(){
     }
     int x;
     x = fib[14];
+    // fib[14] = 10
     return rem(x, 100);
 }
 "
