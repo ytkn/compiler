@@ -101,7 +101,7 @@ assert 3 "
 int main(){
     int x;
     int y;
-    int z;
+    int *z;
     x = 3;
     y = 5;
     z = &y + 2;
@@ -219,6 +219,66 @@ int main(){
     *(a+1) = 1;
     *(a+2) = 3;
     return *(a+1-1);
+}
+"
+
+assert 30 "
+int a;
+
+int change_a(int x){
+    a = x;
+    return 1;
+}
+
+int main(){ 
+    int b;
+    int c;
+    b = 20;
+    c = 10;
+    change_a(b+c);
+    return a;
+}
+"
+
+assert 3 "
+int main(){ 
+    char x[3];
+    x[0] = -1;
+    x[1] = 2;
+    int y;
+    y = 4;
+    return x[0] + y;
+}
+"
+assert 11 "
+int main(){ 
+    char a;
+    char b;
+    a = 1;
+    b = 10;
+    return b+a;
+}
+"
+
+assert 10 "
+int rem(int a, int b){
+    while(a >= b){
+        a = a-b;
+    }
+    return a;
+}
+
+int main(){ 
+    int fib[15];
+    fib[0] = 1;
+    fib[1] = 1;
+    int i;
+    for(i = 2; i < 15; i = i+1){
+        fib[i] = fib[i-1]+fib[i-2];
+    }
+    int x;
+    x = fib[14];
+    return rem(x, 100);
 }
 "
 

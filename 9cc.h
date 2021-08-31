@@ -21,6 +21,7 @@ typedef enum {
     TK_FOR,
     TK_WHILE,
     TK_INT,
+    TK_CHAR,
     TK_SIZEOF,
 } TokenKind;
 
@@ -48,6 +49,8 @@ typedef enum {
 } NodeKind;
 
 typedef enum {
+    TP_BOOL,
+    TP_CHAR,
     TP_INT,
     TP_PTR,
     TP_ARRAY,
@@ -68,6 +71,7 @@ struct Type {
 
 struct Program {
     Vector *funcs;
+    Vector *globals;
 };
 
 struct Function {
@@ -76,6 +80,7 @@ struct Function {
     int name_len;
     Node *node;
     Vector *params;
+    Type *ty; // 戻り値の型
 };
 
 struct Token {
@@ -93,6 +98,8 @@ struct Node {
     int val;
     int offset;  // 左辺値のときのみ使う
     Type *ty;
+
+    bool is_global;
 
     // func name
     char *name;
@@ -117,7 +124,7 @@ struct Node {
 struct LVar {
     char *name;
     int len;
-    int offset;
+    int offset; // local変数のときのみ
     Type *ty;  // ここにも持つべきなのかなあ。。
 };
 
@@ -128,6 +135,7 @@ Token *tokenize();
 
 // parser
 void *program();
+void top_level();
 Function *function();
 Node *stmt();
 Node *expr();
@@ -141,16 +149,18 @@ Node *primary();
 
 void gen(Node *node);
 void gen_func(Function *func);
+void gen_global_def(LVar *global);
 
 int calc_size(TypeKind ty);
 Type *create_type(TypeKind kind, Type *ptr_to);
 
 int sum_offset(Vector *locals);
+int max(int a, int b);
 
 Program *prog;
 Token *token;
 char *user_input;
-int n_controls;  // 制御構文の番号
+int n_controls;  // 制御構文の番号(全体でユニークになる必要がある)
 
 // parse中の関数に関するもの
 Vector *params;

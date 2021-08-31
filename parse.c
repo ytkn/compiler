@@ -39,6 +39,22 @@ Token *consume_ident() {
     return tok;
 }
 
+Type *consume_type() {
+    TypeKind kind;
+    if (consume_kind_of(TK_INT)) {
+        kind = TP_INT;
+    } else if (consume_kind_of(TK_CHAR)) {
+        kind = TP_CHAR;
+    } else {
+        return NULL;
+    }
+    Type *ty = create_type(kind, NULL);
+    while (consume("*")) {
+        ty = create_type(TP_PTR, ty);
+    }
+    return ty;
+}
+
 void expect(char *op) {
     if (token->kind != TK_RESERVED || strlen(op) != token->len || memcmp(token->str, op, token->len))
         error_at(token->str, "'%s'ではありません", op);
@@ -106,6 +122,17 @@ Node *new_node_lvar(LVar *lvar) {
     node->name_len = lvar->len;
     node->ty = lvar->ty;
     node->offset = lvar->offset;
+    node->is_global = false;
+    return node;
+}
+
+Node *new_node_global(LVar *lvar) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LVAR;
+    node->name = lvar->name;
+    node->name_len = lvar->len;
+    node->ty = lvar->ty;
+    node->is_global = true;
     return node;
 }
 
@@ -119,6 +146,14 @@ Function *new_func(char *name, int len, Node *node) {
     return fn;
 }
 
+LVar *find_global(Token *tok) {
+    for (int i = 0; i < prog->globals->size; i++) {
+        LVar *var = prog->globals->data[i];
+        if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+    }
+    return NULL;
+}
+
 LVar *find_lvar(Token *tok) {
     for (int i = 0; i < locals->size; i++) {
         LVar *var = locals->data[i];
@@ -127,6 +162,14 @@ LVar *find_lvar(Token *tok) {
     for (int i = 0; i < params->size; i++) {
         LVar *var = params->data[i];
         if (var->len == tok->len && !memcmp(tok->str, var->name, var->len)) return var;
+    }
+    return NULL;
+}
+
+Function *find_function(Token *tok) {
+    for (int i = 0; i < prog->funcs->size; i++) {
+        Function *func = prog->funcs->data[i];
+        if (func->name_len == tok->len && !memcmp(tok->str, func->name, func->name_len)) return func;
     }
     return NULL;
 }
@@ -150,33 +193,51 @@ Type *create_type(TypeKind kind, Type *ptr_to) {
 void *program() {
     prog = calloc(1, sizeof(Program));
     prog->funcs = create_vector();
+    prog->globals = create_vector();
     while (!at_eof()) {
-        push_vector(prog->funcs, function());
+        top_level();
     }
 }
 
-Function *function() {
-    expect_kind_of(TK_INT);
+void top_level() {
+    Type *ty = consume_type();
+    if (!ty) parse_error("型ではありません\n");
     Token *tok = consume_ident();
+    if (consume("(")) {
+        // NOTE: 再帰関数呼び出しに対応するためにfunctionの中でprog->funcsに入れている。
+        function(tok);
+        return;
+    }
+
+    if (consume("[")) {
+        int num = expect_number();
+        expect("]");
+        parse_error("array in global scope is not implemented\n");
+    } else {
+        LVar *lvar = create_lvar(tok->str, tok->len, 0, ty);
+        push_vector(prog->globals, lvar);
+    }
+    expect(";");
+}
+
+Function *function(Token *tok) {
     Node *node = new_node_func_def();
     Function *fn = new_func(tok->str, tok->len, node);
     locals = fn->locals;
     params = fn->params;
-    expect("(");
     while (true) {
-        if (consume_kind_of(TK_INT)) {
-            Type *ty = create_type(TP_INT, NULL);
-            while (consume("*")) {
-                ty = create_type(TP_PTR, ty);
-            }
+        Type *ty = consume_type();
+        if (ty) {
             Token *param = expect_kind_of(TK_IDENT);
             LVar *lvar = create_lvar(param->str, param->len, 0, ty);
             push_vector(params, lvar);
             if (consume(",")) continue;
         }
         expect(")");
+        fn->ty = ty;
         break;
     }
+    push_vector(prog->funcs, fn);
     // offsetの調整
     for (int i = 0; i < params->size; i++) {
         LVar *var = params->data[i];
@@ -267,8 +328,10 @@ Node *equality() {
     while (true) {
         if (consume("==")) {
             node = new_node(ND_EQ, node, relational());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume("!=")) {
             node = new_node(ND_NE, node, relational());
+            node->ty = create_type(TP_BOOL, NULL);
         } else {
             return node;
         }
@@ -280,12 +343,16 @@ Node *relational() {
     while (true) {
         if (consume("<")) {
             node = new_node(ND_LT, node, add());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume("<=")) {
             node = new_node(ND_LE, node, add());
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume(">")) {
             node = new_node(ND_LT, add(), node);
+            node->ty = create_type(TP_BOOL, NULL);
         } else if (consume(">=")) {
             node = new_node(ND_LE, add(), node);
+            node->ty = create_type(TP_BOOL, NULL);
         } else {
             return node;
         }
@@ -300,7 +367,7 @@ Node *add() {
                 node->ty = create_type(TP_PTR, node->ty->ptr_to);
             }
             node = new_node(ND_ADD, node, mul());
-            node->ty = node->lhs->ty;
+            node->ty = node->lhs->ty; // TODO: ここの型はlhsで決め打つのはだめかもしれない。
         } else if (consume("-")) {
             node = new_node(ND_SUB, node, mul());
             node->ty = node->lhs->ty;
@@ -374,14 +441,10 @@ Node *primary() {
         return node;
     }
 
-    if (consume_kind_of(TK_INT)) {
-        Type *ty = create_type(TP_INT, NULL);
-        while (consume("*")) {
-            ty = create_type(TP_PTR, ty);
-        }
-
+    Type *ty = consume_type();
+    if (ty) {
         Token *tok = expect_kind_of(TK_IDENT);
-        if (find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
+        if (find_global(tok) || find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
         if (consume("[")) {
             int array_size = expect_number() * calc_size(ty->ty);
             ty = create_type(TP_ARRAY, ty);
@@ -395,7 +458,12 @@ Node *primary() {
     Token *tok = consume_ident();
     if (tok) {
         if (consume("(")) {  // 関数呼び出し
+            Function *func = find_function(tok);
+            if (!func) {
+                error_at(tok->str, "定義されていない関数です\n");
+            }
             Node *node = new_node_func_call(tok->str, tok->len);
+            node->ty = func->ty;
             while (true) {
                 if (consume(")")) break;
                 push_vector(node->args, equality());
@@ -404,7 +472,11 @@ Node *primary() {
             }
             return node;
         } else {  // 左辺値
-            LVar *lvar = find_lvar(tok);
+            LVar *lvar = find_global(tok);
+            if (lvar) {
+                return new_node_global(lvar);
+            }
+            lvar = find_lvar(tok);
             if (!lvar) error_at(tok->str, "存在しない変数です\n");
             return new_node_lvar(lvar);
         }

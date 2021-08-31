@@ -36,9 +36,52 @@ gcc -fno-asynchronous-unwind-tables -masm=intel -S test.c
 
 ## やりたいこと
 - [ ] 関数の呼び出しの際の引数チェック
+- [ ] 代入文のチェック
 
 ```c
 int y;
 y = int z;
 ```
 みたいのが許されている
+
+- [x] 適切なサイズで扱う
+
+```c
+int rem(int a, int b){
+    while(a >= b){
+        a = a-b;
+    }
+    return a;
+}
+
+
+int main(){ 
+    int fib[15];
+    fib[0] = 1;
+    fib[1] = 1;
+    int i;
+    for(i = 2; i < 15; i = i+1){
+        fib[i] = fib[i-1]+fib[i-2];
+    }
+    int x;
+    x = fib[12];
+    return rem(x, 100);
+}
+
+```
+が終わらない。8byte分読んでいるからのはず。
+
+```c
+int a;
+int b;
+
+int main(){ 
+    a = 20;
+    b = 10;
+    return a+b;
+}
+```
+で`10`になる。これも8byte書き換えちゃうから。
+
+- `lea`命令ってなんだ？
+

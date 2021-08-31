@@ -2,6 +2,10 @@
 
 int calc_size(TypeKind ty) {
     switch (ty) {
+        case TP_CHAR:
+            return 1;
+        case TP_BOOL:
+            return 1;
         case TP_INT:
             return 4;
         case TP_PTR:
@@ -20,4 +24,9 @@ int sum_offset(Vector *locals) {
         }
     }
     return sum;
+}
+
+int max(int a, int b){
+    if(a > b) return a;
+    return b;
 }
