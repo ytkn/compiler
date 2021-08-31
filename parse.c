@@ -212,7 +212,11 @@ void top_level() {
     if (consume("[")) {
         int num = expect_number();
         expect("]");
-        parse_error("array in global scope is not implemented\n");
+        ty = create_type(TP_ARRAY, ty);
+        ty->array_size = num;
+        LVar *lvar = create_lvar(tok->str, tok->len, 0, ty);
+        push_vector(prog->globals, lvar);
+        // parse_error("array in global scope is not implemented\n");
     } else {
         LVar *lvar = create_lvar(tok->str, tok->len, 0, ty);
         push_vector(prog->globals, lvar);
@@ -367,7 +371,7 @@ Node *add() {
                 node->ty = create_type(TP_PTR, node->ty->ptr_to);
             }
             node = new_node(ND_ADD, node, mul());
-            node->ty = node->lhs->ty; // TODO: ここの型はlhsで決め打つのはだめかもしれない。
+            node->ty = node->lhs->ty;  // TODO: ここの型はlhsで決め打つのはだめかもしれない。
         } else if (consume("-")) {
             node = new_node(ND_SUB, node, mul());
             node->ty = node->lhs->ty;
@@ -446,7 +450,7 @@ Node *primary() {
         Token *tok = expect_kind_of(TK_IDENT);
         if (find_global(tok) || find_lvar(tok)) error_at(tok->str, "すでに定義された変数です\n");
         if (consume("[")) {
-            int array_size = expect_number() * calc_size(ty->ty);
+            int array_size = expect_number();
             ty = create_type(TP_ARRAY, ty);
             ty->array_size = array_size;
             expect("]");
