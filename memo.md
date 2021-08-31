@@ -36,12 +36,15 @@ gcc -fno-asynchronous-unwind-tables -masm=intel -S test.c
 
 ## やりたいこと
 - [ ] 関数の呼び出しの際の引数チェック
+- [ ] 代入文のチェック
 
 ```c
 int y;
 y = int z;
 ```
 みたいのが許されている
+
+- [x] 適切なサイズで扱う
 
 ```c
 int rem(int a, int b){
@@ -50,6 +53,7 @@ int rem(int a, int b){
     }
     return a;
 }
+
 
 int main(){ 
     int fib[15];
@@ -67,8 +71,6 @@ int main(){
 ```
 が終わらない。8byte分読んでいるからのはず。
 
-- `lea`命令ってなんだ？
-
 ```c
 int a;
 int b;
@@ -80,3 +82,6 @@ int main(){
 }
 ```
 で`10`になる。これも8byte書き換えちゃうから。
+
+- `lea`命令ってなんだ？
+
