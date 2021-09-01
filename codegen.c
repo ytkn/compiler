@@ -106,6 +106,7 @@ void gen_func(Function *func) {
     char *func_name = calloc(func->name_len + 1, sizeof(char));
     memcpy(func_name, func->name, func->name_len);
     printf(".globl %s\n", func_name);
+    printf("    .type	%s, @function\n", func_name);
     printf("%s:\n", func_name);
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
