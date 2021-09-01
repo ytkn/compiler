@@ -337,7 +337,7 @@ assert 100 "
 // asciiで'a'は97
 int main() {
     char *c;
-    c = \"abcd\";    
+    \"abcd\";    
     return 1;
 }
 "
