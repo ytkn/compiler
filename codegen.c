@@ -106,7 +106,6 @@ void gen_func(Function *func) {
     char *func_name = calloc(func->name_len + 1, sizeof(char));
     memcpy(func_name, func->name, func->name_len);
     printf(".globl %s\n", func_name);
-    printf("    .type	%s, @function\n", func_name);
     printf("%s:\n", func_name);
     printf("    push rbp\n");
     printf("    mov rbp, rsp\n");
@@ -117,9 +116,29 @@ void gen_func(Function *func) {
     // return節でrbpがもとに戻るのでここでは書かなくていい
 }
 
+// FIXME: とりあえず特別扱いしておく。
+void gen_printf_call(Node *node) {
+    for (int i = 0; i < node->args->size; i++) {
+        Node *arg = (Node *)node->args->data[i];
+        gen(arg);
+        if(i == 0) printf("    mov rdi, [rsp]\n");
+        if(i == 1) printf("    mov esi, [rsp]\n");
+        if(i == 2) printf("    mov edx, [rsp]\n");
+        if(i == 3) printf("    mov ecx, [rsp]\n");
+    }
+    printf("    mov	eax, 0\n");
+    printf("    call printf@PLT\n");
+    printf("    add rsp, %d\n", node->args->size * 8);
+    printf("    push rax\n");
+}
+
 void gen_func_call(Node *node) {
     char *func_name = calloc(node->name_len + 1, sizeof(char));
     memcpy(func_name, node->name, node->name_len);
+    if(startswith(func_name, "printf") && node->name_len == 6){
+        gen_printf_call(node);
+        return;
+    }
     for (int i = 0; i < node->args->size; i++) {
         Node *arg = (Node *)node->args->data[i];
         gen(arg);
