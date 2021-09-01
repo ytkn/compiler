@@ -65,10 +65,6 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     return tok;
 }
 
-bool startswith(char *p, char *q) {
-    return memcmp(p, q, strlen(q)) == 0;
-}
-
 bool is_alphabet(char c) {
     return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }

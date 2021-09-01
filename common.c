@@ -30,3 +30,7 @@ int max(int a, int b){
     if(a > b) return a;
     return b;
 }
+
+bool startswith(char *p, char *q) {
+    return memcmp(p, q, strlen(q)) == 0;
+}

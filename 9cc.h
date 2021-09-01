@@ -142,6 +142,7 @@ void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 
 Token *tokenize();
+bool startswith(char *p, char *q);
 
 // parser
 void *program();
@@ -168,6 +169,7 @@ Type *create_type(TypeKind kind, Type *ptr_to);
 int sum_offset(Vector *locals);
 int max(int a, int b);
 
+Vector *prepared_funcs;
 Program *prog;
 Token *token;
 char *user_input;

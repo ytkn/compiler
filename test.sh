@@ -332,14 +332,6 @@ int main() {
     return fib(a[99]);
 }
 "
-
-assert 0 "
-int main() {
-    \"abcd\";    
-    return 0;
-}
-"
-
 assert 100 "
 // asciiで'a'は97
 int main() {
@@ -348,13 +340,18 @@ int main() {
     return c[3];
 }
 "
-
 assert 97 "
 // asciiで'a'は97
 int main() {
     char *c;
     c = \"abcd\";    
     return c[0];
+}
+"
+assert 0 "
+int main() {
+    \"abcd\";    
+    return 0;
 }
 "
 

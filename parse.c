@@ -177,6 +177,10 @@ LVar *find_lvar(Token *tok) {
 }
 
 Function *find_function(Token *tok) {
+    for (int i = 0; i < prepared_funcs->size; i++) {
+        Function *func = prepared_funcs->data[i];
+        if (func->name_len == tok->len && !memcmp(tok->str, func->name, func->name_len)) return func;
+    }
     for (int i = 0; i < prog->funcs->size; i++) {
         Function *func = prog->funcs->data[i];
         if (func->name_len == tok->len && !memcmp(tok->str, func->name, func->name_len)) return func;
