@@ -333,6 +333,13 @@ int main() {
 }
 "
 
+assert 0 "
+int main() {
+    \"abcd\";    
+    return 0;
+}
+"
+
 assert 100 "
 // asciiで'a'は97
 int main() {
