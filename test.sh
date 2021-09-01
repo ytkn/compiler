@@ -333,4 +333,22 @@ int main() {
 }
 "
 
+assert 100 "
+// asciiで'a'は97
+int main() {
+    char *c;
+    c = \"abcd\";    
+    return c[3];
+}
+"
+
+assert 97 "
+// asciiで'a'は97
+int main() {
+    char *c;
+    c = \"abcd\";    
+    return c[0];
+}
+"
+
 echo OK

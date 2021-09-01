@@ -43,6 +43,12 @@ int main(int argc, char **argv) {
     token = tokenize();
     program();
     printf(".intel_syntax noprefix\n");
+    if(prog->literals->size > 0){
+        printf("    .section	.rodata\n");
+    }
+    for (int i = 0; i < prog->literals->size; i++) {
+        gen_literal_def(prog->literals->data[i]);
+    }
     for (int i = 0; i < prog->globals->size; i++) {
         gen_global_def(prog->globals->data[i]);
     }

@@ -126,6 +126,16 @@ Node *new_node_lvar(LVar *lvar) {
     return node;
 }
 
+Node *new_node_literal(Literal *literal) {
+    Node *node = calloc(1, sizeof(Node));
+    node->kind = ND_LITERAL;
+    node->name = literal->name;
+    node->name_len = literal->len;
+    node->ty = create_type(TP_ARRAY, create_type(TP_CHAR, NULL));
+    node->ty->array_size = literal->len+1;
+    return node;
+}
+
 Node *new_node_global(LVar *lvar) {
     Node *node = calloc(1, sizeof(Node));
     node->kind = ND_LVAR;
@@ -183,6 +193,14 @@ LVar *create_lvar(char *name, int len, int offset, Type *ty) {
     return lvar;
 }
 
+Literal *create_literal(char *name, int len, int idx) {
+    Literal *literal = calloc(1, sizeof(Literal));
+    literal->name = name;
+    literal->len = len;
+    literal->idx = idx;
+    return literal;
+}
+
 Type *create_type(TypeKind kind, Type *ptr_to) {
     Type *type = calloc(1, sizeof(Type));
     type->ty = kind;
@@ -194,6 +212,7 @@ void *program() {
     prog = calloc(1, sizeof(Program));
     prog->funcs = create_vector();
     prog->globals = create_vector();
+    prog->literals = create_vector();
     while (!at_eof()) {
         top_level();
     }
@@ -484,6 +503,13 @@ Node *primary() {
             if (!lvar) error_at(tok->str, "存在しない変数です\n");
             return new_node_lvar(lvar);
         }
+    }
+    Token *tok_literal = consume_kind_of(TK_LITERAL);
+    if (tok_literal) {
+        Literal *literal = create_literal(tok_literal->str, tok_literal->len, prog->literals->size);
+        // fprintf(stderr, "len = %d, %s\n", literal->len, literal->name);
+        push_vector(prog->literals, literal);
+        return new_node_literal(literal);
     }
     return new_node_num(expect_number());
 }

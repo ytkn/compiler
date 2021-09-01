@@ -1,5 +1,6 @@
 int fibo[100];
 int ok[100];
+
 /**
  * メモ化再帰
  */
@@ -25,5 +26,5 @@ int fib(int n){
 int main() {
     int a[100];
     a[99] = 13;
-    return fib(a[99]);
+    return fib(97);
 }

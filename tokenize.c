@@ -94,6 +94,19 @@ Token *tokenize() {
             continue;
         }
 
+        if (*p == '"') {
+            p++;
+            char *q = p;
+            while(*q != '"'){
+                if(!(*q)) error_at(p, "文字列が閉じられていません");
+                q++;
+            }
+            int len = q-p;
+            cur = new_token(TK_LITERAL, cur, p, len);
+            p = q+1;
+            continue;
+        }
+
         if (startswith(p, "/*")) {
             p += 2;
             char *q = p;

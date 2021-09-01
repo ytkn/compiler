@@ -2,6 +2,15 @@
 
 Function *cur_func;
 
+Literal *find_literal(char *name, int len) {
+    for (int i = 0; i < prog->literals->size; i++) {
+        Literal *literal = prog->literals->data[i];
+        if (literal->len == len && !memcmp(name, literal->name, literal->len)) return literal;
+    }
+    error_at(name, "not found literal %d", len);
+    return NULL;
+}
+
 bool is_array(Node *node) {
     for (int i = 0; i < prog->globals->size; i++) {
         LVar *var = prog->globals->data[i];
@@ -56,6 +65,14 @@ void gen_global_def(LVar *global) {
     }else{
         printf("    .comm	%s, %d\n", name, calc_size(global->ty->ty));
     }
+}
+
+void gen_literal_def(Literal *literal) {
+    char *name = calloc(literal->len + 1, sizeof(char));
+    memcpy(name, literal->name, literal->len);
+    printf(".LC%d:\n", literal->idx);
+    printf("    .string	\"%s\"\n", name);
+    free(name);
 }
 
 void gen_global(Node *node) {
@@ -117,6 +134,10 @@ void gen(Node *node) {
     switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);
+            return;
+        case ND_LITERAL:
+            printf("    lea	rax, .LC%d[rip]\n", find_literal(node->name, node->name_len)->idx);
+            printf("    push rax\n");
             return;
         case ND_LVAR:
             gen_lval(node);
