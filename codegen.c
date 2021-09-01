@@ -2,6 +2,15 @@
 
 Function *cur_func;
 
+Literal *find_literal(char *name, int len) {
+    for (int i = 0; i < prog->literals->size; i++) {
+        Literal *literal = prog->literals->data[i];
+        if (literal->len == len && !memcmp(name, literal->name, literal->len)) return literal;
+    }
+    error_at(name, "not found literal %d", len);
+    return NULL;
+}
+
 bool is_array(Node *node) {
     for (int i = 0; i < prog->globals->size; i++) {
         LVar *var = prog->globals->data[i];
@@ -58,6 +67,14 @@ void gen_global_def(LVar *global) {
     }
 }
 
+void gen_literal_def(Literal *literal) {
+    char *name = calloc(literal->len + 1, sizeof(char));
+    memcpy(name, literal->name, literal->len);
+    printf(".LC%d:\n", literal->idx);
+    printf("    .string	\"%s\"\n", name);
+    free(name);
+}
+
 void gen_global(Node *node) {
     char *name = calloc(node->name_len + 1, sizeof(char));
     memcpy(name, node->name, node->name_len);
@@ -99,9 +116,29 @@ void gen_func(Function *func) {
     // return節でrbpがもとに戻るのでここでは書かなくていい
 }
 
+// FIXME: とりあえず特別扱いしておく。
+void gen_printf_call(Node *node) {
+    for (int i = 0; i < node->args->size; i++) {
+        Node *arg = (Node *)node->args->data[i];
+        gen(arg);
+        if(i == 0) printf("    mov rdi, [rsp]\n");
+        if(i == 1) printf("    mov esi, [rsp]\n");
+        if(i == 2) printf("    mov edx, [rsp]\n");
+        if(i == 3) printf("    mov ecx, [rsp]\n");
+    }
+    printf("    mov	eax, 0\n");
+    printf("    call printf@PLT\n");
+    printf("    add rsp, %d\n", node->args->size * 8);
+    printf("    push rax\n");
+}
+
 void gen_func_call(Node *node) {
     char *func_name = calloc(node->name_len + 1, sizeof(char));
     memcpy(func_name, node->name, node->name_len);
+    if(startswith(func_name, "printf") && node->name_len == 6){
+        gen_printf_call(node);
+        return;
+    }
     for (int i = 0; i < node->args->size; i++) {
         Node *arg = (Node *)node->args->data[i];
         gen(arg);
@@ -117,6 +154,10 @@ void gen(Node *node) {
     switch (node->kind) {
         case ND_NUM:
             printf("    push %d\n", node->val);
+            return;
+        case ND_LITERAL:
+            printf("    lea	rax, .LC%d[rip]\n", find_literal(node->name, node->name_len)->idx);
+            printf("    push rax\n");
             return;
         case ND_LVAR:
             gen_lval(node);

@@ -23,6 +23,7 @@ typedef enum {
     TK_INT,
     TK_CHAR,
     TK_SIZEOF,
+    TK_LITERAL,
 } TokenKind;
 
 typedef enum {
@@ -31,6 +32,7 @@ typedef enum {
     ND_MUL,
     ND_DIV,
     ND_NUM,
+    ND_LITERAL,
     ND_ADDR,
     ND_DEREF,
     ND_EQ,  // ==
@@ -62,6 +64,7 @@ typedef struct LVar LVar;
 typedef struct Program Program;
 typedef struct Function Function;
 typedef struct Type Type;
+typedef struct Literal Literal;
 
 struct Type {
     TypeKind ty;
@@ -72,6 +75,7 @@ struct Type {
 struct Program {
     Vector *funcs;
     Vector *globals;
+    Vector *literals;
 };
 
 struct Function {
@@ -80,7 +84,7 @@ struct Function {
     int name_len;
     Node *node;
     Vector *params;
-    Type *ty; // 戻り値の型
+    Type *ty;  // 戻り値の型
 };
 
 struct Token {
@@ -89,6 +93,12 @@ struct Token {
     int val;
     char *str;
     int len;
+};
+
+struct Literal {
+    char *name;
+    int len;
+    int idx;
 };
 
 struct Node {
@@ -124,14 +134,15 @@ struct Node {
 struct LVar {
     char *name;
     int len;
-    int offset; // local変数のときのみ
-    Type *ty;  // ここにも持つべきなのかなあ。。
+    int offset;  // local変数のときのみ
+    Type *ty;    // ここにも持つべきなのかなあ。。
 };
 
 void error(char *fmt, ...);
 void error_at(char *loc, char *fmt, ...);
 
 Token *tokenize();
+bool startswith(char *p, char *q);
 
 // parser
 void *program();
@@ -150,6 +161,7 @@ Node *primary();
 void gen(Node *node);
 void gen_func(Function *func);
 void gen_global_def(LVar *global);
+void gen_literal_def(Literal *literal);
 
 int calc_size(TypeKind ty);
 Type *create_type(TypeKind kind, Type *ptr_to);
@@ -157,6 +169,7 @@ Type *create_type(TypeKind kind, Type *ptr_to);
 int sum_offset(Vector *locals);
 int max(int a, int b);
 
+Vector *prepared_funcs;
 Program *prog;
 Token *token;
 char *user_input;

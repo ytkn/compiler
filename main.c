@@ -29,6 +29,14 @@ char *read_file(char *path) {
     return buf;
 }
 
+void gen_prepared_funcs(){
+    prepared_funcs = create_vector();
+    Function *printf_func = calloc(1, sizeof(Function));
+    printf_func->name = "printf";
+    printf_func->name_len = 6;
+    push_vector(prepared_funcs, printf_func);
+}
+
 int main(int argc, char **argv) {
     if (argc != 2) {
         fprintf(stderr, "引数の個数が正しくありません\n");
@@ -41,8 +49,15 @@ int main(int argc, char **argv) {
         user_input = argv[1];
     }
     token = tokenize();
+    gen_prepared_funcs();
     program();
     printf(".intel_syntax noprefix\n");
+    if(prog->literals->size > 0){
+        printf("    .section	.rodata\n");
+    }
+    for (int i = 0; i < prog->literals->size; i++) {
+        gen_literal_def(prog->literals->data[i]);
+    }
     for (int i = 0; i < prog->globals->size; i++) {
         gen_global_def(prog->globals->data[i]);
     }

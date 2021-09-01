@@ -65,10 +65,6 @@ Token *new_token(TokenKind kind, Token *cur, char *str, int len) {
     return tok;
 }
 
-bool startswith(char *p, char *q) {
-    return memcmp(p, q, strlen(q)) == 0;
-}
-
 bool is_alphabet(char c) {
     return ('a' <= c && c <= 'z') || ('A' <= c && c <= 'Z');
 }
@@ -91,6 +87,19 @@ Token *tokenize() {
         if (startswith(p, "//")) {
             p += 2;
             while (*p != '\n') p++;
+            continue;
+        }
+
+        if (*p == '"') {
+            p++;
+            char *q = p;
+            while(*q != '"'){
+                if(!(*q)) error_at(p, "文字列が閉じられていません");
+                q++;
+            }
+            int len = q-p;
+            cur = new_token(TK_LITERAL, cur, p, len);
+            p = q+1;
             continue;
         }
 

@@ -23,8 +23,12 @@ int fib(int n){
     return ans;
 }
 
-int main() {
-    int a[100];
-    a[99] = 13;
-    return fib(97);
+int main(){
+    int x;
+    int i = 0;
+    for(i = 0; i < 40; i=i+1){
+        x = fib(i);
+        printf("fib[%d] = %d\n", i, x);
+    }
+    return 0;
 }
