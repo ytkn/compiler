@@ -338,7 +338,7 @@ assert 100 "
 int main() {
     char *c;
     c = \"abcd\";    
-    return c[3];
+    return 1;
 }
 "
 
