@@ -58,6 +58,7 @@ int main(int argc, char **argv) {
     for (int i = 0; i < prog->literals->size; i++) {
         gen_literal_def(prog->literals->data[i]);
     }
+    printf("    .text\n");
     for (int i = 0; i < prog->globals->size; i++) {
         gen_global_def(prog->globals->data[i]);
     }
